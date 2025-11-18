@@ -1,19 +1,18 @@
 // app/login/page.tsx
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import LoginForm from "@/components/crm/user/LoginForm";
 
 export default function LoginPage() {
   const router = useRouter();
-  const sp = useSearchParams();
-  const next = sp.get("next") || "/";
+
 
   return (
     <main className="relative min-h-dvh flex items-center justify-center px-6
                       bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100">
       <div className="w-full max-w-md">
-        <LoginForm onLoginSuccess={() => router.replace(next)} />
+        <LoginForm onLoginSuccess={() => router.push("/")} />
       </div>
 
       {/* Décor optionnel (halo flou) */}
