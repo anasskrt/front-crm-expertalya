@@ -7,7 +7,7 @@ import { LogOut } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
 import { getProfil } from "@/api/profil";
-import { clearJwtCookie } from "@/lib/sessionCookie";
+import { logout } from "@/api/auth";
 import SocieteArchiverManagement from "@/components/crm/societe/SocieteArchiverManagement";
 
 export default function SocietesPage() {
@@ -29,8 +29,12 @@ export default function SocietesPage() {
     }
   }, [currentUser, router, setCurrentUser]);
 
-  const handleLogout = () => {
-    clearJwtCookie();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignorer les erreurs de logout
+    }
     window.location.href = "/login";
   };
 

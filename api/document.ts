@@ -10,7 +10,6 @@ export async function getSocieteDocument(id: number) {
 //     const fd = new FormData();
 //     fd.append("file", file);
 //     fd.append("societeId", String(societeId));
-//     console.log("Uploading file for societeId:", societeId, file);
 //     const { data } = await api.post(`/document/${societeId}/upload`, { fd });
 
 //     return data;

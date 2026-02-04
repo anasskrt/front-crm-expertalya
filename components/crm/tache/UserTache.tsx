@@ -82,7 +82,6 @@ const TacheManagement = () => {
     });
     getTache(statusFilters).then((data) => {
       setTaches(data.tasks);
-      console.log(data.tasks);
       setInfoGlobal(data.counts);
     });
     getSocieteNomId().then((societes) => setSocietes(societes));

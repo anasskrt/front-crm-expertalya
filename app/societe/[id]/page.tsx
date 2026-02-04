@@ -26,7 +26,7 @@ export default function SocieteDetailPage() {
         .then((data) => setSociete(data))
         .catch(() => setSociete(null));
     }
-  }, [id, societe]);
+  }, [id]);
 
   if (!isAuthenticated) {
     router.push("/");

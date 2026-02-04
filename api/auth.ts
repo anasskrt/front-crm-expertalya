@@ -4,10 +4,16 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function login(email: string, password: string) {
-  const response = await axios.post(`${API_URL}/auth/login`, {
-    email,
-    password,
-  });
+  const response = await axios.post(
+    `${API_URL}/auth/login`,
+    { email, password },
+    { withCredentials: true } // Le cookie HttpOnly sera défini automatiquement
+  );
+  return response.data;
+}
+
+export async function logout() {
+  const response = await api.post("/auth/logout");
   return response.data;
 }
 

@@ -25,3 +25,8 @@ export async function upgradeUser(id: number) {
   const { data } = await api.patch(`/user/${id}`, {});
   return data;
 }
+
+export async function updateUserCabinet(userId: number, cabinetId: number) {
+  const { data } = await api.patch(`/user/${userId}/cabinet`, { cabinet: cabinetId });
+  return data;
+}

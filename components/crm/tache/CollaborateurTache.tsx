@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash, CheckCircle, Clock, Goal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createTache, getTacheByCollabo } from "@/api/tache";
-import { getRoles } from "@/api/auth";
 import { getUserCab } from "@/api/user";
 import { getSocieteNomId } from "@/api/societe";
 import { useUser } from "@/context/UserContext";
@@ -106,6 +105,11 @@ const TacheManagementCollabo = () => {
     setErrors({});
 
     try {
+      // Déterminer l'userId pour l'assignation et le refresh
+      const assignedUserId = role 
+        ? parseInt(newMission.assigneA) 
+        : currentUser?.id;
+
       await createTache({
         titre: newMission.titre,
         description: newMission.description,
@@ -114,13 +118,18 @@ const TacheManagementCollabo = () => {
         dateEcheance: newMission.dateEcheance ? new Date(newMission.dateEcheance) : undefined,
         dateTache: newMission.dateTache ? new Date(newMission.dateTache) : undefined,
         societeId: parseInt(newMission.societeId),
-        assignedTo: role ? parseInt(newMission.assigneA) : undefined,
+        assignedTo: assignedUserId,
         statut: "EN_ATTENTE",
       });
       
-      const data = await getTacheByCollabo(selectedUserId, statusFilters); // ⬅️ filtré par user sélectionné
-      setTaches(Array.isArray(data.tasks) ? data.tasks : []);
-      setInfoGlobal(data.counts ?? {});
+      // Rafraîchir les tâches seulement si on a un userId valide
+      const userIdToFetch = selectedUserId || currentUser?.id;
+      if (userIdToFetch) {
+        const data = await getTacheByCollabo(userIdToFetch, statusFilters);
+        setTaches(Array.isArray(data.tasks) ? data.tasks : []);
+        setInfoGlobal(data.counts ?? {});
+      }
+
       setNewMission({
         societeId: "",
         titre: "",
@@ -147,22 +156,25 @@ const TacheManagementCollabo = () => {
 
   // ————— INIT : rôle, liste users, sociétés, user sélectionné par défaut —————
   useEffect(() => {
+    // Attendre que currentUser soit chargé
+    if (!currentUser) return;
+
     (async () => {
       try {
-        const r = await getRoles();
-        if (r == 1) {
+        // Utiliser currentUser.role au lieu de getRoles()
+        if (currentUser.role == 1) {
           setRole(true);
           const us = await getUserCab();
           setUsers(us || []);
         } else {
           // Si collaborateur, on fixe son ID directement
-          if (currentUser?.id) setSelectedUserId(currentUser.id);
+          if (currentUser.id) setSelectedUserId(currentUser.id);
         }
       } finally {
         getSocieteNomId().then((socs) => setSocietes(socs || []));
       }
     })();
-  }, [currentUser?.id]);
+  }, [currentUser]);
 
   // ————— Chargement des tâches en fonction des filtres + utilisateur —————
   useEffect(() => {

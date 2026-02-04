@@ -31,7 +31,6 @@ export default function CompanyFavorites() {
 
   const toggleFavorite = async (societe: any) => {
     const isFav = favorites.includes(societe.id); // Utilise l'id
-    console.log(societe);
     if (isFav) {
       await removeSocieteFromFavoris(societe.id);
     } else {

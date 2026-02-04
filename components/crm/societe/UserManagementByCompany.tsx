@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Edit, Trash2, UserPlus } from "lucide-react";
+import { Search, Edit, Trash2, UserPlus, Building2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { getUtilisateurs, createUtilisateur, deleteUser, upgradeUser } from "@/api/user";
+import { getUtilisateurs, createUtilisateur, deleteUser, upgradeUser, updateUserCabinet } from "@/api/user";
 import { getCabinets } from "@/api/cabinet";
 import { Cabinet, User } from '@/data/data'
+import { useUser } from "@/context/UserContext";
+import { logout } from "@/api/auth";
 
 interface NewUserForm {
   name: string;
@@ -29,9 +31,16 @@ const UserManagementByCompany = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showChangeCabinetDialog, setShowChangeCabinetDialog] = useState(false);
+  const [selectedUserForCabinet, setSelectedUserForCabinet] = useState<User | null>(null);
+  const [targetCabinetId, setTargetCabinetId] = useState<string>("");
   const { toast } = useToast();
+  const { currentUser } = useUser();
   
   const [loading, setLoading] = useState(true);
+
+  // Vérifier si l'utilisateur est admin
+  const isAdmin = currentUser?.role === 1;
 
   const form = useForm<NewUserForm>({
     defaultValues: {
@@ -48,7 +57,6 @@ const UserManagementByCompany = () => {
       setCabinets(Array.isArray(cabinets) ? cabinets : []);
     });
     getUtilisateurs().then(users => {
-      console.log(users)
       setUsers(Array.isArray(users) ? users : []);
     }).finally(() => setLoading(false));
   }, []);
@@ -126,6 +134,71 @@ const UserManagementByCompany = () => {
         description: "Erreur lors de l'upgrade de l'utilisateur.",
       });
     }
+  };
+
+  const handleChangeCabinet = async () => {
+    if (!selectedUserForCabinet || !targetCabinetId) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un utilisateur et un cabinet cible.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateUserCabinet(selectedUserForCabinet.id, parseInt(targetCabinetId));
+      
+      const newCabinet = cabinets.find(c => c.id === parseInt(targetCabinetId));
+
+      // Si l'admin change son propre cabinet, il doit se reconnecter pour rafraîchir le token
+      if (selectedUserForCabinet.id === currentUser?.id) {
+        toast({
+          title: "Cabinet modifié",
+          description: "Vous avez changé votre propre cabinet. Vous allez être déconnecté pour rafraîchir votre session.",
+        });
+        
+        // Déconnexion après 2 secondes pour laisser le temps de lire le message
+        setTimeout(async () => {
+          try {
+            await logout();
+          } catch {
+            // Ignorer les erreurs de logout
+          }
+          window.location.href = "/login";
+        }, 2000);
+        
+        return;
+      }
+
+      // Mettre à jour la liste localement
+      setUsers(prev => prev.map(user =>
+        user.id === selectedUserForCabinet.id
+          ? { ...user, cabinet: newCabinet! }
+          : user
+      ));
+
+      toast({
+        title: "Cabinet modifié",
+        description: `${selectedUserForCabinet.firstName} ${selectedUserForCabinet.name} a été transféré vers ${newCabinet?.name}. L'utilisateur devra se reconnecter pour que le changement prenne effet.`,
+      });
+
+      setShowChangeCabinetDialog(false);
+      setSelectedUserForCabinet(null);
+      setTargetCabinetId("");
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du changement de cabinet.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openChangeCabinetDialog = (user: User) => {
+    setSelectedUserForCabinet(user);
+    setTargetCabinetId(user.cabinet.id.toString());
+    setShowChangeCabinetDialog(true);
   };
 
   return (
@@ -286,6 +359,63 @@ const UserManagementByCompany = () => {
                 </Form>
             </DialogContent>
             </Dialog>
+
+            {/* Dialog pour changer de cabinet (admin uniquement) */}
+            {isAdmin && (
+              <Dialog open={showChangeCabinetDialog} onOpenChange={setShowChangeCabinetDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Changer le cabinet d&apos;un utilisateur</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    {selectedUserForCabinet && (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium">
+                          {selectedUserForCabinet.firstName} {selectedUserForCabinet.name}
+                        </p>
+                        <p className="text-sm text-gray-500">{selectedUserForCabinet.email}</p>
+                        <p className="text-sm text-gray-500">
+                          Cabinet actuel: <span className="font-medium">{selectedUserForCabinet.cabinet.name}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Nouveau cabinet</label>
+                      <Select value={targetCabinetId} onValueChange={setTargetCabinetId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un cabinet" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cabinets.map((cabinet) => (
+                            <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                              {cabinet.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex gap-2 pt-4">
+                      <Button onClick={handleChangeCabinet}>
+                        Confirmer le transfert
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowChangeCabinetDialog(false);
+                          setSelectedUserForCabinet(null);
+                          setTargetCabinetId("");
+                        }}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
         </div>
 
         {/* Liste des utilisateurs */}
@@ -325,6 +455,17 @@ const UserManagementByCompany = () => {
                     </TableCell>
                     <TableCell>
                         <div className="flex gap-2">
+                          {/* Bouton changer de cabinet (admin uniquement) */}
+                          {isAdmin && (
+                            <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openChangeCabinetDialog(user)}
+                                title="Changer de cabinet"
+                            >
+                                <Building2 className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button 
                               size="sm" 
                               variant="outline"

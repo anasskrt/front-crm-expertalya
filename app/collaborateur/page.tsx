@@ -6,8 +6,8 @@ import { LogOut } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
 import { getProfil } from "@/api/profil";
+import { logout } from "@/api/auth";
 import { useRouter } from "next/navigation";
-import { clearJwtCookie } from "@/lib/sessionCookie";
 import TacheManagementCollabo from "@/components/crm/tache/CollaborateurTache";
 
 const MissionsPage = () => {
@@ -29,10 +29,13 @@ const MissionsPage = () => {
     }
   }, [currentUser, router, setCurrentUser]);
 
-  const handleLogout = () => {
-    clearJwtCookie();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignorer les erreurs de logout
+    }
     window.location.href = "/login";
-
   };
 
   return (

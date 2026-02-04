@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, UserCog, Heart } from "lucide-react";
 import { getProfil } from "@/api/profil";
+import { logout } from "@/api/auth";
 import UserProfile from "@/components/crm/user/UserProfile";
 import CompanyFavorites from "@/components/crm/user/CompanyFavorites";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
-import { clearJwtCookie } from "@/lib/sessionCookie";
 
 export default function ProfilPage() {
   const { currentUser, setCurrentUser } = useUser();
@@ -32,8 +32,12 @@ export default function ProfilPage() {
     return null;
   }
 
-  const handleLogout = () => {
-    clearJwtCookie();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignorer les erreurs de logout
+    }
     window.location.href = "/login";
   };
 

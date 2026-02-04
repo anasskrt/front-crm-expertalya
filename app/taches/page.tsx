@@ -7,8 +7,8 @@ import TacheManagement from "@/components/crm/tache/UserTache";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
 import { getProfil } from "@/api/profil";
+import { logout } from "@/api/auth";
 import { useRouter } from "next/navigation";
-import { clearJwtCookie } from "@/lib/sessionCookie";
 
 const MissionsPage = () => {
   const { currentUser, setCurrentUser } = useUser();
@@ -29,10 +29,13 @@ const MissionsPage = () => {
     }
   }, [currentUser, router, setCurrentUser]);
 
-  const handleLogout = () => {
-    clearJwtCookie();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignorer les erreurs de logout
+    }
     window.location.href = "/login";
-
   };
 
   return (

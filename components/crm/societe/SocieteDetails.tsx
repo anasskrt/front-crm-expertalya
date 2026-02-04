@@ -103,7 +103,6 @@ const SocieteDetails = ({
 
   const handleSaveInfos = async () => {
     try {
-      console.log('currentUserRole', isAdmin);
 
       if (!isAdmin) {
         toast({

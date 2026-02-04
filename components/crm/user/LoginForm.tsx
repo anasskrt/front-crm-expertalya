@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Building, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { login } from "@/api/auth";
-import { setJwtCookie } from "@/lib/sessionCookie";
 
 // Ajout du type de props
 interface LoginFormProps {
@@ -28,11 +27,8 @@ export default function LoginPage({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
     setLoginError("");
     try {
-      const data = await login(email, password);
-      if (data.token) {
-        console.log("login fonctionnel")
-        setJwtCookie(data.token);
-      }
+      await login(email, password);
+      // Le cookie HttpOnly est défini automatiquement par le backend
       toast({
         title: "Connexion réussie",
         description: "Bienvenue dans votre CRM !",

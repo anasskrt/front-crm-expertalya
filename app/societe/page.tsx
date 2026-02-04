@@ -8,7 +8,7 @@ import Navigation from "@/components/crm/Navigation";
 import SocieteManagement from "@/components/crm/societe/SocieteManagement";
 import { useUser } from "@/context/UserContext";
 import { getProfil } from "@/api/profil";
-import { clearJwtCookie } from "@/lib/sessionCookie";
+import { logout } from "@/api/auth";
 
 export default function SocietesPage() {
   const { currentUser, setCurrentUser } = useUser();
@@ -29,8 +29,12 @@ export default function SocietesPage() {
     }
   }, [currentUser, router, setCurrentUser]);
 
-  const handleLogout = () => {
-    clearJwtCookie();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignorer les erreurs de logout
+    }
     window.location.href = "/login";
   };
 

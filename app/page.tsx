@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Building, Heart, UserCog, LogOut, Plus } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import { getProfil } from "@/api/profil";
-import { clearJwtCookie } from "@/lib/sessionCookie";
+import { logout } from "@/api/auth";
 
 export default function Page() {
   const [pending, setPending] = useState(true);
@@ -22,8 +22,7 @@ export default function Page() {
         const user = await getProfil();          // l'intercepteur lit le JWT depuis le cookie
         if (!cancelled) setCurrentUser(user);
       } catch {
-        // Pas de JWT ou expiré → nettoyage + redirection vers /login
-        clearJwtCookie();
+        // Pas de JWT ou expiré → redirection vers /login
         if (typeof window !== "undefined") {
           window.location.href = "/login?reason=expired";
         }
@@ -34,8 +33,12 @@ export default function Page() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleLogout = () => {
-    clearJwtCookie();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignorer les erreurs de logout
+    }
     window.location.href = "/login";
   };
 
