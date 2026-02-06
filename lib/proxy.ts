@@ -11,6 +11,8 @@ export async function proxyRequest(
   const url = `${BACKEND_URL}${backendPath}`;
 
   console.log(`[PROXY] ${method} -> ${url}`);
+  console.log(`[PROXY] BACKEND_URL configured: ${BACKEND_URL ? "YES" : "NO - MISSING!"}`);
+  console.log(`[PROXY] Full target URL: ${url}`);
 
   // Récupérer les headers importants
   const headers = new Headers();
@@ -67,6 +69,11 @@ export async function proxyRequest(
     });
 
     console.log(`[PROXY] Response: ${response.status}`);
+    
+    // Log détaillé pour les erreurs
+    if (response.status >= 400) {
+      console.log(`[PROXY] Error response headers:`, Object.fromEntries(response.headers.entries()));
+    }
 
     // Créer la réponse avec les headers du backend
     const responseHeaders = new Headers();
@@ -93,6 +100,12 @@ export async function proxyRequest(
     // Gérer les différents types de réponse
     if (respContentType?.includes("application/json")) {
       const data = await response.json();
+      
+      // Log le contenu de l'erreur pour le debug
+      if (response.status >= 400) {
+        console.log(`[PROXY] Error body:`, JSON.stringify(data));
+      }
+      
       return NextResponse.json(data, {
         status: response.status,
         headers: responseHeaders,
