@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Building, Heart, UserCog, LogOut, Plus } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
-import { getProfil } from "@/app/api/profil";
-import { logout } from "@/app/api/auth";
+import { apiGet, apiPost } from "@/lib/api";
 
 export default function Page() {
   const [pending, setPending] = useState(true);
@@ -19,7 +18,7 @@ export default function Page() {
     let cancelled = false;
     (async () => {
       try {
-        const user = await getProfil();          // l'intercepteur lit le JWT depuis le cookie
+        const user = await apiGet<any>("/user/profil");
         if (!cancelled) setCurrentUser(user);
       } catch {
         // Pas de JWT ou expiré → redirection vers /login
@@ -35,7 +34,7 @@ export default function Page() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await apiPost("/auth/logout", {});
     } catch {
       // Ignorer les erreurs de logout
     }

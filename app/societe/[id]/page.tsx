@@ -8,7 +8,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import { Societe } from "@/data/data";
 import SocieteDetails from "@/components/crm/societe/SocieteDetails";
 import Navigation from "@/components/crm/Navigation";
-import { getSocieteById } from "@/app/api/societe";
+import { apiGet } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 
 export default function SocieteDetailPage() {
@@ -22,7 +22,7 @@ export default function SocieteDetailPage() {
 
   useEffect(() => {
     if (id) {
-      getSocieteById(Number(id))
+      apiGet<Societe>(`/societe/${id}`)
         .then((data) => setSociete(data))
         .catch(() => setSociete(null));
     }

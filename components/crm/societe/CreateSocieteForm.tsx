@@ -12,7 +12,7 @@ import {
   formatsJuridiques,
 } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
-import { createSocieteWithContact } from "@/app/api/societe";
+import { apiPost } from "@/lib/api";
 
 export default function CreateSocieteForm() {
   const { toast } = useToast();
@@ -146,13 +146,13 @@ export default function CreateSocieteForm() {
 
   
     try {
-      await createSocieteWithContact(payload);
+      await apiPost("/societe", payload);
       setCreated(true);
       toast({ title: "Société créée", description: "La nouvelle société a été créée." });
     } catch (err: any) {
       toast({
         title: "Erreur",
-        description: err?.response?.data?.message || "Erreur lors de la création.",
+        description: err?.message || "Erreur lors de la création.",
         variant: "destructive",
       });
     }  finally {

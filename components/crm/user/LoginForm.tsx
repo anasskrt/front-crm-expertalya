@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { login } from "@/app/api/auth";
+import { apiPost } from "@/lib/api";
 
 // Ajout du type de props
 interface LoginFormProps {
@@ -27,7 +27,7 @@ export default function LoginPage({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
     setLoginError("");
     try {
-      await login(email, password);
+      await apiPost("/auth/login", { email, password });
       // Le cookie HttpOnly est défini automatiquement par le backend
       toast({
         title: "Connexion réussie",
@@ -35,12 +35,10 @@ export default function LoginPage({ onLoginSuccess }: LoginFormProps) {
       });
       onLoginSuccess();
     } catch (error: any) {
-      setLoginError(error?.response?.data?.message || "Identifiants invalides.");
+      setLoginError(error?.message || "Identifiants invalides.");
       toast({
         title: "Erreur de connexion",
-        description:
-          error?.response?.data?.message ||
-          "Veuillez vérifier vos identifiants.",
+        description: error?.message || "Veuillez vérifier vos identifiants.",
         variant: "destructive",
       });
     } finally {

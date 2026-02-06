@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,8 +7,7 @@ import { LogOut } from "lucide-react";
 import TacheManagement from "@/components/crm/tache/UserTache";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
-import { getProfil } from "@/app/api/profil";
-import { logout } from "@/app/api/auth";
+import { apiGet, apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 const MissionsPage = () => {
@@ -17,7 +17,7 @@ const MissionsPage = () => {
 
   useEffect(() => {
     if (!currentUser) {
-      getProfil()
+      apiGet<any>("/user/profil")
         .then(setCurrentUser)
         .catch(() => {
           setCurrentUser(null);
@@ -31,7 +31,7 @@ const MissionsPage = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await apiPost("/auth/logout", {});
     } catch {
       // Ignorer les erreurs de logout
     }

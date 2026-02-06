@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getProfil } from "@/app/api/profil";
+import { apiGet } from "@/lib/api";
 
 interface UserContextType {
   currentUser: any | null;
@@ -14,7 +14,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getProfil()
+    apiGet("/user/profil")
       .then(setCurrentUser)
       .catch(() => setCurrentUser(null))
       .finally(() => setIsLoading(false));

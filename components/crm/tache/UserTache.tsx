@@ -16,12 +16,9 @@ import {
   Goal
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getTache, updateTacheById  } from "@/app/api/tache";
-import { getRoles } from "@/app/api/auth";
-import { getSocieteNomId } from "@/app/api/societe";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { Societe, Tache, TypeTache, UserCabinet, ALL_STATUTS } from '@/data/data'
-import { createCommentaire  } from "@/app/api/commentaire"; // ou "@/api/commentaire"
 
 const TYPE_LABELS: Record<TypeTache, string> = {
   [TypeTache.DEMANDE_INFO]: "Demande d'information",
@@ -75,20 +72,20 @@ const TacheManagement = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    getRoles().then((data) => {
+    apiGet<number>("/auth/roles").then((data) => {
       if (data == 1) { 
         setRole(true);
       } 
     });
-    getTache(statusFilters).then((data) => {
+    apiGet<any>("/task", { statuts: statusFilters.join(",") }).then((data) => {
       setTaches(data.tasks);
       setInfoGlobal(data.counts);
     });
-    getSocieteNomId().then((societes) => setSocietes(societes));
+    apiGet<Societe[]>("/societe/nom-id").then((societes) => setSocietes(societes));
   }, []);
 
   useEffect(() => {
-    getTache(statusFilters).then((data) => {
+    apiGet<any>("/task", { statuts: statusFilters.join(",") }).then((data) => {
       setTaches(Array.isArray(data.tasks) ? data.tasks : []);
       setInfoGlobal(data.counts ?? {});
     });
@@ -127,7 +124,7 @@ const TacheManagement = () => {
     }
   
     try {
-      await updateTacheById(mission.id, {
+      await apiPatch(`/task/${mission.id}`, {
         statut: nextStatut,
         ...(tempsPasse !== undefined ? { tempsPasse } : {})
       });
@@ -138,13 +135,13 @@ const TacheManagement = () => {
       });
   
       // Refresh tasks
-      const updated = await getTache();
+      const updated = await apiGet<any>("/task", { statuts: statusFilters.join(",") });
       setTaches(updated.tasks);
       setInfoGlobal(updated.counts);
     } catch (err: any) {
       toast({
         title: "Erreur API",
-        description: err?.response?.data?.message || "Erreur lors du changement de statut.",
+        description: err?.message || "Erreur lors du changement de statut.",
         variant: "destructive",
       });
     }
@@ -163,7 +160,7 @@ const TacheManagement = () => {
   
     setCommentLoading((p) => ({ ...p, [missionId]: true }));
     try {
-      const newComment = await createCommentaire(missionId, commentaire);
+      const newComment = await apiPost<any>(`/commentaire/${missionId}`, { contenu: commentaire });
   
       // 📌 Maj locale: on pousse le nouveau commentaire dans la tâche
       setTaches((prev) =>
@@ -214,7 +211,7 @@ const TacheManagement = () => {
     }
   
     try {
-      await updateTacheById(mission.id, {
+      await apiPatch(`/task/${mission.id}`, {
         statut: newStatut,
         ...(tempsPasse !== undefined ? { tempsPasse } : {}),
       });
@@ -225,13 +222,13 @@ const TacheManagement = () => {
       });
   
       // refresh pour garder counts/tri à jour (on conserve tes filtres)
-      const updated = await getTache(statusFilters);
+      const updated = await apiGet<any>("/task", { statuts: statusFilters.join(",") });
       setTaches(Array.isArray(updated.tasks) ? updated.tasks : []);
       setInfoGlobal(updated.counts ?? {});
     } catch (err: any) {
       toast({
         title: "Erreur API",
-        description: err?.response?.data?.message || "Erreur lors du changement de statut.",
+        description: err?.message || "Erreur lors du changement de statut.",
         variant: "destructive",
       });
     }

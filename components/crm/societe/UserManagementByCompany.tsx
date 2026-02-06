@@ -10,11 +10,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { getUtilisateurs, createUtilisateur, deleteUser, upgradeUser, updateUserCabinet } from "@/app/api/user";
-import { getCabinets } from "@/app/api/cabinet";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 import { Cabinet, User } from '@/data/data'
 import { useUser } from "@/context/UserContext";
-import { logout } from "@/app/api/auth";
 
 interface NewUserForm {
   name: string;
@@ -53,10 +51,10 @@ const UserManagementByCompany = () => {
   });
 
   useEffect(() => {
-    getCabinets().then(cabinets => {
+    apiGet<Cabinet[]>("/cabinet").then(cabinets => {
       setCabinets(Array.isArray(cabinets) ? cabinets : []);
     });
-    getUtilisateurs().then(users => {
+    apiGet<User[]>("/user").then(users => {
       setUsers(Array.isArray(users) ? users : []);
     }).finally(() => setLoading(false));
   }, []);
@@ -88,7 +86,7 @@ const UserManagementByCompany = () => {
 
   const onSubmit = async (data: NewUserForm) => {
     try {
-      await createUtilisateur({ ...data });
+      await apiPost("/user", { ...data });
       toast({
         title: "Utilisateur ajouté",
         description: `${data.firstName} ${data.name} a été ajouté avec succès.`,
@@ -96,7 +94,7 @@ const UserManagementByCompany = () => {
       form.reset();
       setShowAddDialog(false);
       // Recharge la liste après ajout
-      const users = await getUtilisateurs();
+      const users = await apiGet<User[]>("/user");
       setUsers(Array.isArray(users) ? users : []);
     } catch {
       toast({ title: "Erreur", description: "Erreur lors de la création." });
@@ -105,7 +103,7 @@ const UserManagementByCompany = () => {
 
   const handleUDelete = async (userId: number) => {
     try {
-        await deleteUser(userId);
+        await apiDelete(`/user/${userId}`);
         setUsers(prev => prev.filter(user => user.id !== userId));
     } catch {
         toast({
@@ -118,10 +116,10 @@ const UserManagementByCompany = () => {
 
   const handleUpgrade = async (userId: number) => {
     try {
-      const updatedUser = await upgradeUser(userId);
+      const updatedUser = await apiPatch<User>(`/user/${userId}/upgrade`, {});
       setUsers(prev => prev.map(user =>
         user.id === userId
-          ? { ...user, role: updatedUser?.role || "ADMIN" }
+          ? { ...user, role: updatedUser?.role ?? user.role }
           : user
       ));
       toast({
@@ -147,7 +145,7 @@ const UserManagementByCompany = () => {
     }
 
     try {
-      await updateUserCabinet(selectedUserForCabinet.id, parseInt(targetCabinetId));
+      await apiPatch(`/user/${selectedUserForCabinet.id}/cabinet`, { cabinetId: parseInt(targetCabinetId) });
       
       const newCabinet = cabinets.find(c => c.id === parseInt(targetCabinetId));
 
@@ -161,7 +159,7 @@ const UserManagementByCompany = () => {
         // Déconnexion après 2 secondes pour laisser le temps de lire le message
         setTimeout(async () => {
           try {
-            await logout();
+            await apiPost("/auth/logout", {});
           } catch {
             // Ignorer les erreurs de logout
           }

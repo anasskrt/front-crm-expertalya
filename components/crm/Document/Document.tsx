@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Upload, Download } from "lucide-react";
-import { getSocieteDocument, openDocument, uploadSocieteDocument } from "@/app/api/document";
+import { apiGet, apiPostFormData, apiGetBlob } from "@/lib/api";
 
 type BackendDocument = {
   id: number;
@@ -78,7 +78,7 @@ export default function SocieteDocuments({
     (async () => {
       try {
         setLoading(true);
-        const data: BackendDocument[] = await getSocieteDocument(societeId);
+        const data: BackendDocument[] = await apiGet(`/document/societe/${societeId}`);
         const mapped = Array.isArray(data) ? data.map(mapBackendDocToUI) : [];
         if (mounted) {
           setDocuments(mapped);
@@ -97,7 +97,6 @@ export default function SocieteDocuments({
       mounted = false;
     };
   }, [societeId, onCountChange]);
-
   const handleUploadFiles = async (files: FileList | File[]) => {
     if (!files || (files as any).length === 0) return;
     const arr = Array.from(files);
@@ -115,7 +114,11 @@ export default function SocieteDocuments({
     onCountChange?.(documents.length + temps.length);
 
     try {
-      const created = await Promise.all(arr.map((file) => uploadSocieteDocument(societeId, file)));
+      const created = await Promise.all(arr.map((file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return apiPostFormData<BackendDocument>(`/document/${societeId}`, formData);
+      }));
       const mapped = created.map(mapBackendDocToUI);
 
       setDocuments((prev) => {
@@ -253,7 +256,19 @@ export default function SocieteDocuments({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => openDocument(doc.id)}>
+                  <Button variant="ghost" size="sm" onClick={async () => {
+                    try {
+                      const blob = await apiGetBlob(`/document/${doc.id}`);
+                      const url = URL.createObjectURL(blob);
+                      window.open(url, "_blank");
+                    } catch {
+                      toast({
+                        title: "Erreur",
+                        description: "Impossible d'ouvrir le document.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>

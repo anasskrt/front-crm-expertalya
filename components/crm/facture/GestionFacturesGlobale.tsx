@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { getAnalyseAll } from "@/app/api/facture";
+import { apiGet } from "@/lib/api";
 import { 
   Card, CardContent, CardHeader, CardTitle 
 } from "@/components/ui/card";
@@ -41,7 +41,7 @@ export default function GestionFacturesGlobalePage() {
 
   useEffect(() => {
     setLoading(true);
-    getAnalyseAll()
+    apiGet<AnalyseSociete[]>("/facture/analyse")
       .then(data => setAnalyses(data))
       .catch(err => {
         console.error(err);

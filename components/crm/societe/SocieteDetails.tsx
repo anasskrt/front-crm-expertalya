@@ -21,12 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import FactureGestion from "../facture/FactureGestion";
 import { Societe } from "@/data/data";
-import { updateSociete } from "@/app/api/societe";
+import { apiPatch, apiPost } from "@/lib/api";
 
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { formatsJuridiques, activitesPrincipales } from "@/data/mockData";
-import { createTarif } from "@/app/api/tarif";
 import SocieteDocuments from "../Document/Document";
 import SocieteTaches from "../tache/TacheSociete";
 
@@ -143,7 +142,7 @@ const SocieteDetails = ({
         ancienEC: infosDraft.ancienEC.trim() || null,
       };
 
-      const updatedFromApi = await updateSociete(societeState.id, payload);
+      const updatedFromApi = await apiPatch<Societe>(`/societe/${societeState.id}`, payload);
 
       const next = (updatedFromApi && updatedFromApi.id)
         ? updatedFromApi
@@ -156,7 +155,7 @@ const SocieteDetails = ({
           dateRepriseMission: payload.dateRepriseMission ?? undefined,
           dateDebutFacturation: payload.dateDebutFacturation ?? undefined,
           activiteId: payload.activiteId ?? societeState.activiteId,
-        };
+        } as Societe;
 
       // 🔁 Met à jour l’état affiché
       setSocieteState(next);
@@ -231,7 +230,7 @@ const SocieteDetails = ({
       dateDebut: newTarif.dateDebut || "",
     };
     try {
-      const created = await createTarif(societe.id, nouveau)
+      const created = await apiPost<any>(`/tarif/${societe.id}`, nouveau);
 
       const newTarifEntity = created && created.id ? created : nouveau;
 

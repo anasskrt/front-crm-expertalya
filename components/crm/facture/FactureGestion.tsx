@@ -18,8 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Download, Calendar, Euro, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getAllFacturesForSos } from "@/app/api/facture";
-import { createFacture, updateFacture } from "@/app/api/facture"; // <-- ajouté
+import { apiGet, apiPost, apiPatch } from "@/lib/api";
 import { Textarea } from "../../ui/textarea";
 import React from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog";
@@ -63,7 +62,7 @@ export default function FactureGestion({ societeId }: FactureGestionProps) {
 
   const refresh = () => {
     setLoading(true);
-    getAllFacturesForSos(societeId)
+    apiGet<FactureModel[]>(`/facture/societe/${societeId}`)
       .then((data) => setFactures(data))
       .catch((err) => {
         console.error(err);
@@ -127,7 +126,7 @@ export default function FactureGestion({ societeId }: FactureGestionProps) {
 
     try {
       setSaving(true);
-      await createFacture(societeId, form);
+      await apiPost(`/facture/${societeId}`, form);
       toast({
         title: "Facture créée",
         description: "La facture a été ajoutée avec succès.",
@@ -220,8 +219,8 @@ export default function FactureGestion({ societeId }: FactureGestionProps) {
       return;
     }
   
-    // Mise à jour locale (front only)
-    await updateFacture(editingId!, editForm);
+    // Mise à jour via API
+    await apiPatch(`/facture/${editingId}`, editForm);
 
     setFactures((prev) =>
       prev.map((f) =>
@@ -238,7 +237,7 @@ export default function FactureGestion({ societeId }: FactureGestionProps) {
   
     setShowEdit(false);
     setEditingId(null);
-    toast({ title: "Facture modifiée", description: "Modifications enregistrées (front)." });
+    toast({ title: "Facture modifiée", description: "Modifications enregistrées." });
   };
   
   const cancelEdit = () => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect } from "react";
@@ -6,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, UserCog, Heart } from "lucide-react";
-import { getProfil } from "@/app/api/profil";
-import { logout } from "@/app/api/auth";
+import { apiGet, apiPost } from "@/lib/api";
 import UserProfile from "@/components/crm/user/UserProfile";
 import CompanyFavorites from "@/components/crm/user/CompanyFavorites";
 import Navigation from "@/components/crm/Navigation";
@@ -19,7 +19,7 @@ export default function ProfilPage() {
 
   useEffect(() => {
     if (!currentUser) {
-      getProfil()
+      apiGet<any>("/user/profil")
         .then(setCurrentUser)
         .catch(() => {
           setCurrentUser(null);
@@ -34,7 +34,7 @@ export default function ProfilPage() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await apiPost("/auth/logout", {});
     } catch {
       // Ignorer les erreurs de logout
     }

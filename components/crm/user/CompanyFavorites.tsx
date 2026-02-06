@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Search, Building, Users, MapPin, Calendar } from "lucide-react";
-import { getListeFav, addSocieteToFavoris, removeSocieteFromFavoris } from "@/app/api/listeFav";
+import { apiGet, apiPatch, apiDelete } from "@/lib/api";
 
 export default function CompanyFavorites() {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -19,7 +19,7 @@ export default function CompanyFavorites() {
   }, []);
 
   const refreshFavorites = async () => {
-    const data = await getListeFav();
+    const data = await apiGet<any[]>("/user/favori");
     setCompanies(data);
     setFavorites(data.map((c: any) => c.id)); // Utilise maintenant l'id
   };
@@ -32,9 +32,9 @@ export default function CompanyFavorites() {
   const toggleFavorite = async (societe: any) => {
     const isFav = favorites.includes(societe.id); // Utilise l'id
     if (isFav) {
-      await removeSocieteFromFavoris(societe.id);
+      await apiDelete(`/user/favori/${societe.id}`);
     } else {
-      await addSocieteToFavoris(societe.id);
+      await apiPatch("/user/favori", { societeId: societe.id });
     }
     await refreshFavorites();
   };

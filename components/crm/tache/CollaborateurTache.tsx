@@ -13,9 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash, CheckCircle, Clock, Goal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createTache, getTacheByCollabo } from "@/app/api/tache";
-import { getUserCab } from "@/app/api/user";
-import { getSocieteNomId } from "@/app/api/societe";
+import { apiGet, apiPost } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { Societe, Tache, TypeTache, UserCabinet } from "@/data/data";
 
@@ -110,7 +108,7 @@ const TacheManagementCollabo = () => {
         ? parseInt(newMission.assigneA) 
         : currentUser?.id;
 
-      await createTache({
+      await apiPost("/task", {
         titre: newMission.titre,
         description: newMission.description,
         type: newMission.type,
@@ -125,7 +123,7 @@ const TacheManagementCollabo = () => {
       // Rafraîchir les tâches seulement si on a un userId valide
       const userIdToFetch = selectedUserId || currentUser?.id;
       if (userIdToFetch) {
-        const data = await getTacheByCollabo(userIdToFetch, statusFilters);
+        const data = await apiGet<any>(`/task/collaborateur/${userIdToFetch}`, { statuts: statusFilters.join(",") });
         setTaches(Array.isArray(data.tasks) ? data.tasks : []);
         setInfoGlobal(data.counts ?? {});
       }
@@ -164,14 +162,14 @@ const TacheManagementCollabo = () => {
         // Utiliser currentUser.role au lieu de getRoles()
         if (currentUser.role == 1) {
           setRole(true);
-          const us = await getUserCab();
+          const us = await apiGet<UserCabinet[]>("/user/cabinet");
           setUsers(us || []);
         } else {
           // Si collaborateur, on fixe son ID directement
           if (currentUser.id) setSelectedUserId(currentUser.id);
         }
       } finally {
-        getSocieteNomId().then((socs) => setSocietes(socs || []));
+        apiGet<Societe[]>("/societe/nom-id").then((socs) => setSocietes(socs || []));
       }
     })();
   }, [currentUser]);
@@ -180,7 +178,7 @@ const TacheManagementCollabo = () => {
   useEffect(() => {
     if (!selectedUserId) return; // pas d’utilisateur => pas d’appel
   
-    getTacheByCollabo(selectedUserId, statusFilters)
+    apiGet<any>(`/task/collaborateur/${selectedUserId}`, { statuts: statusFilters.join(",") })
       .then((data) => {
         setTaches(Array.isArray(data.tasks) ? data.tasks : []);
         setInfoGlobal(data.counts ?? {});
@@ -360,7 +358,7 @@ const TacheManagementCollabo = () => {
                 <Button
                   onClick={async () => {
                     if (!isCreating) {
-                      const data = await getSocieteNomId();
+                      const data = await apiGet<Societe[]>("/societe/nom-id");
                       setSocietes(data || []);
                     }
                     setIsCreating((p) => !p);
@@ -374,7 +372,6 @@ const TacheManagementCollabo = () => {
             </div>
           </div>
         </CardHeader>
-
         {isCreating && (
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

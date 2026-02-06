@@ -15,7 +15,7 @@ import {
   Loader2,
   Link as LinkIcon,
 } from "lucide-react";
-import { exportAllSociete, exportAllTask } from "@/app/api/excel";
+import { apiPost } from "@/lib/api";
 
 type ExportStatus = {
   ok: boolean;
@@ -61,11 +61,11 @@ export default function ExcelManagement() {
         const datas: any[] = [];
   
         if (which === "societes" || which === "all") {
-          const d = await exportAllSociete(); // <- axios renvoie directement data
+          const d = await apiPost<any>("/googleapi/societe", {});
           datas.push({ kind: "societes", data: d });
         }
         if (which === "tasks" || which === "all") {
-          const d = await exportAllTask();
+          const d = await apiPost<any>("/googleapi/task", {});
           datas.push({ kind: "tasks", data: d });
         }
   
@@ -88,13 +88,8 @@ export default function ExcelManagement() {
         setStatus({ ok: true, message, details: datas });
         setLastRunAt(new Date());
       } catch (e: any) {
-        // axios -> l’erreur est levée, on peut afficher des infos utiles
-        const apiMsg =
-          e?.response?.data?.message ??
-          e?.response?.data?.error ??
-          e?.message ??
-          "Erreur réseau ou serveur lors de l’export.";
-        setStatus({ ok: false, message: apiMsg, details: e?.response?.data ?? String(e) });
+        const apiMsg = e?.message ?? "Erreur réseau ou serveur lors de l'export.";
+        setStatus({ ok: false, message: apiMsg, details: String(e) });
       } finally {
         setLoading(null);
       }

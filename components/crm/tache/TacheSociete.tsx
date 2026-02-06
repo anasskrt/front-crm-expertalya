@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle, Goal } from "lucide-react";
-import { getTacheForSociete } from "@/app/api/tache";
+import { apiGet } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { Tache } from "@/data/data";
 
@@ -51,7 +51,7 @@ export default function SocieteTaches({
     (async () => {
       try {
         setLoading(true);
-        const data = await getTacheForSociete(societeId);
+        const data = await apiGet<any>(`/task/societe/${societeId}`);
         if (!mounted) return;
         setTaches(Array.isArray(data?.tasks) ? data.tasks : []);
         const nextCounts: Counts = {
@@ -77,7 +77,6 @@ export default function SocieteTaches({
       mounted = false;
     };
   }, [societeId, toast, onCountsChange]);
-
   const sorted = useMemo(() => {
     return [...taches].sort((a, b) => {
       if (a.statut === b.statut) {

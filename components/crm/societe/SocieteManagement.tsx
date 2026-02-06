@@ -14,8 +14,7 @@ import {
   FileText,
   Eye
 } from "lucide-react";
-import { searchSocietes } from "@/app/api/societe";
-import { addSocieteToFavoris, getListeFav, removeSocieteFromFavoris } from "@/app/api/listeFav";
+import { apiGet, apiPatch, apiDelete } from "@/lib/api";
 
 import { useToast } from "@/hooks/use-toast";
 
@@ -79,7 +78,7 @@ export default function SocieteManagement() {
 
   const handleLikeSociete = async (id: number) => {
     try {
-      await addSocieteToFavoris(id);
+      await apiPatch(`/user/favori`, { societeId: id });
       setFavorites(prev => [...prev, id]);
       toast({ title: "Ajouté aux favoris", description: "Société ajoutée à vos favoris." });
     } catch {
@@ -89,7 +88,7 @@ export default function SocieteManagement() {
 
   const handleUnlikeSociete = async (id: number) => {
     try {
-      await removeSocieteFromFavoris(id);
+      await apiDelete(`/user/favori/${id}`);
       setFavorites(prev => prev.filter(favId => favId !== id));
       toast({ title: "Retiré des favoris", description: "Société retirée de vos favoris." });
     } catch {
@@ -100,11 +99,11 @@ export default function SocieteManagement() {
   useEffect(() => {
     setLoading(true);
 
-    getListeFav().then((data) => {
+    apiGet<any[]>("/user/favori").then((data) => {
       setFavorites(data.map((s: any) => s.id));
     }),
 
-    searchSocietes(filters)
+    apiGet<SocieteShort[]>("/societe", filters as unknown as Record<string, string>)
       .then((data) => setSocietes(data))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
