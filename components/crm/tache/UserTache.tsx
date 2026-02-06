@@ -77,15 +77,15 @@ const TacheManagement = () => {
         setRole(true);
       } 
     });
-    apiGet<any>("/task", { statuts: statusFilters.join(",") }).then((data) => {
+    apiGet<any>("/task", { status: statusFilters.join(",") }).then((data) => {
       setTaches(data.tasks);
       setInfoGlobal(data.counts);
     });
-    apiGet<Societe[]>("/societe/nom-id").then((societes) => setSocietes(societes));
+    apiGet<Societe[]>("/societe/short").then((societes) => setSocietes(societes));
   }, []);
 
   useEffect(() => {
-    apiGet<any>("/task", { statuts: statusFilters.join(",") }).then((data) => {
+    apiGet<any>("/task", { status: statusFilters.join(",") }).then((data) => {
       setTaches(Array.isArray(data.tasks) ? data.tasks : []);
       setInfoGlobal(data.counts ?? {});
     });
@@ -135,7 +135,7 @@ const TacheManagement = () => {
       });
   
       // Refresh tasks
-      const updated = await apiGet<any>("/task", { statuts: statusFilters.join(",") });
+      const updated = await apiGet<any>("/task", { status: statusFilters.join(",") });
       setTaches(updated.tasks);
       setInfoGlobal(updated.counts);
     } catch (err: any) {
@@ -222,7 +222,7 @@ const TacheManagement = () => {
       });
   
       // refresh pour garder counts/tri à jour (on conserve tes filtres)
-      const updated = await apiGet<any>("/task", { statuts: statusFilters.join(",") });
+      const updated = await apiGet<any>("/task", { status: statusFilters.join(",") });
       setTaches(Array.isArray(updated.tasks) ? updated.tasks : []);
       setInfoGlobal(updated.counts ?? {});
     } catch (err: any) {

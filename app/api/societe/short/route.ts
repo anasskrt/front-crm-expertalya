@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { proxyRequest } from "@/lib/proxy";
 
-// GET /api/societe/nom/id
+// GET /api/societe/short
 export async function GET(request: NextRequest) {
-  return proxyRequest(request, "/societe/nom/id");
+  return proxyRequest(request, "/societe/short");
 }

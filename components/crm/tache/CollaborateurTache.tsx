@@ -123,7 +123,7 @@ const TacheManagementCollabo = () => {
       // Rafraîchir les tâches seulement si on a un userId valide
       const userIdToFetch = selectedUserId || currentUser?.id;
       if (userIdToFetch) {
-        const data = await apiGet<any>(`/task/collaborateur/${userIdToFetch}`, { statuts: statusFilters.join(",") });
+        const data = await apiGet<any>(`/task/collaborateur/${userIdToFetch}`, { status: statusFilters.join(",") });
         setTaches(Array.isArray(data.tasks) ? data.tasks : []);
         setInfoGlobal(data.counts ?? {});
       }
@@ -169,7 +169,7 @@ const TacheManagementCollabo = () => {
           if (currentUser.id) setSelectedUserId(currentUser.id);
         }
       } finally {
-        apiGet<Societe[]>("/societe/nom-id").then((socs) => setSocietes(socs || []));
+        apiGet<Societe[]>("/societe/short").then((socs) => setSocietes(socs || []));
       }
     })();
   }, [currentUser]);
@@ -178,7 +178,7 @@ const TacheManagementCollabo = () => {
   useEffect(() => {
     if (!selectedUserId) return; // pas d’utilisateur => pas d’appel
   
-    apiGet<any>(`/task/collaborateur/${selectedUserId}`, { statuts: statusFilters.join(",") })
+    apiGet<any>(`/task/collaborateur/${selectedUserId}`, { status: statusFilters.join(",") })
       .then((data) => {
         setTaches(Array.isArray(data.tasks) ? data.tasks : []);
         setInfoGlobal(data.counts ?? {});
@@ -358,7 +358,7 @@ const TacheManagementCollabo = () => {
                 <Button
                   onClick={async () => {
                     if (!isCreating) {
-                      const data = await apiGet<Societe[]>("/societe/nom-id");
+                      const data = await apiGet<Societe[]>("/societe/short");
                       setSocietes(data || []);
                     }
                     setIsCreating((p) => !p);
