@@ -8,7 +8,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import { Societe } from "@/data/data";
 import SocieteDetails from "@/components/crm/societe/SocieteDetails";
 import Navigation from "@/components/crm/Navigation";
-import { getSocieteById } from "@/api/societe";
+import { getSocieteById } from "@/app/api/societe";
 import { useUser } from "@/context/UserContext";
 
 export default function SocieteDetailPage() {

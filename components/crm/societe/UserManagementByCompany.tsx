@@ -10,11 +10,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { getUtilisateurs, createUtilisateur, deleteUser, upgradeUser, updateUserCabinet } from "@/api/user";
-import { getCabinets } from "@/api/cabinet";
+import { getUtilisateurs, createUtilisateur, deleteUser, upgradeUser, updateUserCabinet } from "@/app/api/user";
+import { getCabinets } from "@/app/api/cabinet";
 import { Cabinet, User } from '@/data/data'
 import { useUser } from "@/context/UserContext";
-import { logout } from "@/api/auth";
+import { logout } from "@/app/api/auth";
 
 interface NewUserForm {
   name: string;

@@ -11,6 +11,7 @@ export async function getUserCab() {
   return data;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createUtilisateur(payload: any) {
   const { data } = await api.post("/user", payload);
   return data;

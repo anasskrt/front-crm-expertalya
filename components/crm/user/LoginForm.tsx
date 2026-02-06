@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { login } from "@/api/auth";
+import { login } from "@/app/api/auth";
 
 // Ajout du type de props
 interface LoginFormProps {

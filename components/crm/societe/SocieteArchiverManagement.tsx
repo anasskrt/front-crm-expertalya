@@ -14,8 +14,8 @@ import {
   FileText,
   Eye
 } from "lucide-react";
-import { searchSocieteArchivercietes } from "@/api/societe";
-import { addSocieteToFavoris, getListeFav, removeSocieteFromFavoris } from "@/api/listeFav";
+import { searchSocieteArchivercietes } from "@/app/api/societe";
+import { addSocieteToFavoris, getListeFav, removeSocieteFromFavoris } from "@/app/api/listeFav";
 
 import { useToast } from "@/hooks/use-toast";
 

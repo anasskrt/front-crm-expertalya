@@ -15,7 +15,7 @@ import {
   Loader2,
   Link as LinkIcon,
 } from "lucide-react";
-import { exportAllSociete, exportAllTask } from "@/api/excel";
+import { exportAllSociete, exportAllTask } from "@/app/api/excel";
 
 type ExportStatus = {
   ok: boolean;

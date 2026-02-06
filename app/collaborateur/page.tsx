@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
-import { getProfil } from "@/api/profil";
-import { logout } from "@/api/auth";
+import { getProfil } from "@/app/api/profil";
+import { logout } from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 import TacheManagementCollabo from "@/components/crm/tache/CollaborateurTache";
 

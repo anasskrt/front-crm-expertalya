@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getProfil } from "@/api/profil";
+import { getProfil } from "@/app/api/profil";
 
 interface UserContextType {
   currentUser: any | null;

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle, Goal } from "lucide-react";
-import { getTacheForSociete } from "@/api/tache";
+import { getTacheForSociete } from "@/app/api/tache";
 import { useToast } from "@/hooks/use-toast";
 import type { Tache } from "@/data/data";
 

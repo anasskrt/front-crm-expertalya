@@ -21,12 +21,12 @@ import {
 } from "@/components/ui/dialog";
 import FactureGestion from "../facture/FactureGestion";
 import { Societe } from "@/data/data";
-import { updateSociete } from "@/api/societe";
+import { updateSociete } from "@/app/api/societe";
 
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { formatsJuridiques, activitesPrincipales } from "@/data/mockData";
-import { createTarif } from "@/api/tarif";
+import { createTarif } from "@/app/api/tarif";
 import SocieteDocuments from "../Document/Document";
 import SocieteTaches from "../tache/TacheSociete";
 

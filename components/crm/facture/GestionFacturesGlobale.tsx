@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { getAnalyseAll } from "@/api/facture";
+import { getAnalyseAll } from "@/app/api/facture";
 import { 
   Card, CardContent, CardHeader, CardTitle 
 } from "@/components/ui/card";

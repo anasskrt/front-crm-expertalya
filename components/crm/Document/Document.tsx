@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Upload, Download } from "lucide-react";
-import { getSocieteDocument, openDocument, uploadSocieteDocument } from "@/api/document";
+import { getSocieteDocument, openDocument, uploadSocieteDocument } from "@/app/api/document";
 
 type BackendDocument = {
   id: number;

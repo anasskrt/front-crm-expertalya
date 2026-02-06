@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/api/taches.ts
 import api from "@/lib/axiosClient";
 

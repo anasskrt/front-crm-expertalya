@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/api/users.ts
 import api from "@/lib/axiosClient";
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import api from "@/lib/axiosClient";
 
 interface FactureModel {
@@ -9,7 +10,6 @@ interface FactureModel {
   paye: boolean;
   commentaire: string;
 }
-
 
 export async function getAllFactures(societeId: number) {
   const { data } = await api.get(`/facture/all/${societeId}`);

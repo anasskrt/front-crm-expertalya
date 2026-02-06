@@ -16,12 +16,12 @@ import {
   Goal
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getTache, updateTacheById  } from "@/api/tache";
-import { getRoles } from "@/api/auth";
-import { getSocieteNomId } from "@/api/societe";
+import { getTache, updateTacheById  } from "@/app/api/tache";
+import { getRoles } from "@/app/api/auth";
+import { getSocieteNomId } from "@/app/api/societe";
 import { useUser } from "@/context/UserContext";
 import { Societe, Tache, TypeTache, UserCabinet, ALL_STATUTS } from '@/data/data'
-import { createCommentaire  } from "@/api/commentaire"; // ou "@/api/commentaire"
+import { createCommentaire  } from "@/app/api/commentaire"; // ou "@/api/commentaire"
 
 const TYPE_LABELS: Record<TypeTache, string> = {
   [TypeTache.DEMANDE_INFO]: "Demande d'information",

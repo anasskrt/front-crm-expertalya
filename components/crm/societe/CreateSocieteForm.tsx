@@ -12,7 +12,7 @@ import {
   formatsJuridiques,
 } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
-import { createSocieteWithContact } from "@/api/societe";
+import { createSocieteWithContact } from "@/app/api/societe";
 
 export default function CreateSocieteForm() {
   const { toast } = useToast();

@@ -18,8 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Download, Calendar, Euro, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getAllFacturesForSos } from "@/api/facture";
-import { createFacture, updateFacture } from "@/api/facture"; // <-- ajouté
+import { getAllFacturesForSos } from "@/app/api/facture";
+import { createFacture, updateFacture } from "@/app/api/facture"; // <-- ajouté
 import { Textarea } from "../../ui/textarea";
 import React from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog";

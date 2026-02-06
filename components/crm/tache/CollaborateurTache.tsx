@@ -13,9 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash, CheckCircle, Clock, Goal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createTache, getTacheByCollabo } from "@/api/tache";
-import { getUserCab } from "@/api/user";
-import { getSocieteNomId } from "@/api/societe";
+import { createTache, getTacheByCollabo } from "@/app/api/tache";
+import { getUserCab } from "@/app/api/user";
+import { getSocieteNomId } from "@/app/api/societe";
 import { useUser } from "@/context/UserContext";
 import { Societe, Tache, TypeTache, UserCabinet } from "@/data/data";
 

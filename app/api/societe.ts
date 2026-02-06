@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "@/lib/axiosClient";
 
 export async function searchSocietes(filters: Record<string, any>) {

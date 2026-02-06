@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
-import { getProfil } from "@/api/profil";
-import { logout } from "@/api/auth";
+import { getProfil } from "@/app/api/profil";
+import { logout } from "@/app/api/auth";
 import SocieteArchiverManagement from "@/components/crm/societe/SocieteArchiverManagement";
 
 export default function SocietesPage() {

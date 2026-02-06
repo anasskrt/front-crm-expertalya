@@ -6,8 +6,8 @@ import { LogOut } from "lucide-react";
 import TacheManagement from "@/components/crm/tache/UserTache";
 import Navigation from "@/components/crm/Navigation";
 import { useUser } from "@/context/UserContext";
-import { getProfil } from "@/api/profil";
-import { logout } from "@/api/auth";
+import { getProfil } from "@/app/api/profil";
+import { logout } from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 
 const MissionsPage = () => {

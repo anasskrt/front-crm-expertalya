@@ -7,8 +7,8 @@ import { LogOut } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import SocieteManagement from "@/components/crm/societe/SocieteManagement";
 import { useUser } from "@/context/UserContext";
-import { getProfil } from "@/api/profil";
-import { logout } from "@/api/auth";
+import { getProfil } from "@/app/api/profil";
+import { logout } from "@/app/api/auth";
 
 export default function SocietesPage() {
   const { currentUser, setCurrentUser } = useUser();

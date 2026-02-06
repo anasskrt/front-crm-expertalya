@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Building, Heart, UserCog, LogOut, Plus } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
-import { getProfil } from "@/api/profil";
-import { logout } from "@/api/auth";
+import { getProfil } from "@/app/api/profil";
+import { logout } from "@/app/api/auth";
 
 export default function Page() {
   const [pending, setPending] = useState(true);

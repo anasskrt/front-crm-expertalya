@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Search, Building, Users, MapPin, Calendar } from "lucide-react";
-import { getListeFav, addSocieteToFavoris, removeSocieteFromFavoris } from "@/api/listeFav";
+import { getListeFav, addSocieteToFavoris, removeSocieteFromFavoris } from "@/app/api/listeFav";
 
 export default function CompanyFavorites() {
   const [companies, setCompanies] = useState<any[]>([]);
