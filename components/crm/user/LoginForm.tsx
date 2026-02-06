@@ -17,8 +17,8 @@ interface LoginFormProps {
 // Correction du nom du composant et ajout des props
 export default function LoginPage({ onLoginSuccess }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("jean.dupont@example.com");
-  const [password, setPassword] = useState("motdepasseSuperSecret!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const { toast } = useToast();
 
