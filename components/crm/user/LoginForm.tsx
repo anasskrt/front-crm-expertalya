@@ -95,16 +95,6 @@ export default function LoginPage({ onLoginSuccess }: LoginFormProps) {
               {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Compte de test :
-              <br />
-              <span className="font-mono text-xs">
-              jean.dupont@example.com / motdepasseSuperSecret!
-              </span>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
