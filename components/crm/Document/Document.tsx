@@ -78,7 +78,7 @@ export default function SocieteDocuments({
     (async () => {
       try {
         setLoading(true);
-        const data: BackendDocument[] = await apiGet(`/document/societe/${societeId}`);
+        const data: BackendDocument[] = await apiGet(`/document/${societeId}`);
         const mapped = Array.isArray(data) ? data.map(mapBackendDocToUI) : [];
         if (mounted) {
           setDocuments(mapped);
@@ -117,7 +117,7 @@ export default function SocieteDocuments({
       const created = await Promise.all(arr.map((file) => {
         const formData = new FormData();
         formData.append("file", file);
-        return apiPostFormData<BackendDocument>(`/document/${societeId}`, formData);
+        return apiPostFormData<BackendDocument>(`/document/${societeId}/upload`, formData);
       }));
       const mapped = created.map(mapBackendDocToUI);
 
@@ -258,7 +258,7 @@ export default function SocieteDocuments({
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={async () => {
                     try {
-                      const blob = await apiGetBlob(`/document/${doc.id}`);
+                      const blob = await apiGetBlob(`/document/${doc.id}/download`);
                       const url = URL.createObjectURL(blob);
                       window.open(url, "_blank");
                     } catch {
