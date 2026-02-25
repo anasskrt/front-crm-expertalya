@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,8 @@ import {
   FileText,
   User,
   X,
-  BadgeEuro
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import {
   Dialog,
@@ -21,11 +22,12 @@ import {
 } from "@/components/ui/dialog";
 import FactureGestion from "../facture/FactureGestion";
 import { Societe } from "@/data/data";
-import { apiPatch, apiPost } from "@/lib/api";
+import { apiPatch } from "@/lib/api";
 
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { formatsJuridiques, activitesPrincipales } from "@/data/mockData";
+import { formatsJuridiques } from "@/data/mockData";
+import { getAllActivites, Activite } from "@/lib/api/activite";
 import SocieteDocuments from "../Document/Document";
 import SocieteTaches from "../tache/TacheSociete";
 
@@ -99,6 +101,44 @@ const SocieteDetails = ({
 
   const setDraft = <K extends keyof typeof infosDraft>(key: K, value: (typeof infosDraft)[K]) =>
     setInfosDraft(prev => ({ ...prev, [key]: value }));
+
+  // États pour les activités
+  const [activites, setActivites] = useState<Activite[]>([]);
+  const [activiteSearch, setActiviteSearch] = useState("");
+  const [showActiviteDropdown, setShowActiviteDropdown] = useState(false);
+  const activiteRef = useRef<HTMLDivElement>(null);
+
+  // Charger les activités depuis l'API
+  useEffect(() => {
+    getAllActivites()
+      .then((data) => {
+        const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
+        setActivites(sorted);
+      })
+      .catch(() => {
+        // Silencieux en cas d'erreur
+      });
+  }, []);
+
+  // Fermer le dropdown si clic à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activiteRef.current && !activiteRef.current.contains(event.target as Node)) {
+        setShowActiviteDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filtrer les activités selon la recherche
+  const filteredActivites = activites.filter((a) =>
+    a.name.toLowerCase().includes(activiteSearch.toLowerCase())
+  );
+
+  // Obtenir le nom de l'activité sélectionnée
+  const selectedActiviteName = activites.find((a) => a.id === Number(infosDraft.activite))?.name || "";
+  const displayActiviteName = activites.find((a) => a.id === societeState.activiteId)?.name || "—";
 
   const handleSaveInfos = async () => {
     try {
@@ -200,77 +240,77 @@ const SocieteDetails = ({
   };
 
   //tarif 
-  const [tarifs, setTarifs] = useState((societe as any).tarifs || []);
+  // const [tarifs, setTarifs] = useState((societe as any).tarifs || []);
 
-  const [newTarif, setNewTarif] = useState({
-    dateFacturation: "",
-    montantCompta: "",
-    montantSocial: "",
-    montantRattrapage: "",
-    montantAutres: "",
-    dateDebut: "",
-  });
+  // const [newTarif, setNewTarif] = useState({
+  //   dateFacturation: "",
+  //   montantCompta: "",
+  //   montantSocial: "",
+  //   montantRattrapage: "",
+  //   montantAutres: "",
+  //   dateDebut: "",
+  // });
 
-  const handleNewTarifChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewTarif((prev) => ({ ...prev, [name]: value }));
-  };
+  // const handleNewTarifChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+  //   setNewTarif((prev) => ({ ...prev, [name]: value }));
+  // };
 
-  const handleSubmitNewTarif = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmitNewTarif = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    const nouveau = {
-      id: Math.floor(Math.random() * 1000000),
-      dateFacturation: newTarif.dateFacturation,
-      montantCompta: Number(newTarif.montantCompta) || 0,
-      montantSocial: Number(newTarif.montantSocial) || 0,
-      montantRattrapage: Number(newTarif.montantRattrapage) || 0,
-      montantAutres: Number(newTarif.montantAutres) || 0,
-      actif: true,
-      dateDebut: newTarif.dateDebut || "",
-    };
-    try {
-      const created = await apiPost<any>(`/tarif/${societe.id}`, nouveau);
+  //   const nouveau = {
+  //     id: Math.floor(Math.random() * 1000000),
+  //     dateFacturation: newTarif.dateFacturation,
+  //     montantCompta: Number(newTarif.montantCompta) || 0,
+  //     montantSocial: Number(newTarif.montantSocial) || 0,
+  //     montantRattrapage: Number(newTarif.montantRattrapage) || 0,
+  //     montantAutres: Number(newTarif.montantAutres) || 0,
+  //     actif: true,
+  //     dateDebut: newTarif.dateDebut || "",
+  //   };
+  //   try {
+  //     const created = await apiPost<any>(`/tarif/${societe.id}`, nouveau);
 
-      const newTarifEntity = created && created.id ? created : nouveau;
+  //     const newTarifEntity = created && created.id ? created : nouveau;
 
-      // Tous les anciens deviennent inactifs, on ajoute le nouveau actif
-      setTarifs((prev: any[]) => {
-        const updated = prev.map((t) => ({ ...t, actif: false }));
-        // 🔹 Le nouveau tarif est ajouté en premier dans la liste
-        return [newTarifEntity, ...updated];
-      });
+  //     // Tous les anciens deviennent inactifs, on ajoute le nouveau actif
+  //     setTarifs((prev: any[]) => {
+  //       const updated = prev.map((t) => ({ ...t, actif: false }));
+  //       // 🔹 Le nouveau tarif est ajouté en premier dans la liste
+  //       return [newTarifEntity, ...updated];
+  //     });
 
-      setNewTarif({
-        dateFacturation: "",
-        montantCompta: "",
-        montantSocial: "",
-        montantRattrapage: "",
-        montantAutres: "",
-        dateDebut: "",
-      });
+  //     setNewTarif({
+  //       dateFacturation: "",
+  //       montantCompta: "",
+  //       montantSocial: "",
+  //       montantRattrapage: "",
+  //       montantAutres: "",
+  //       dateDebut: "",
+  //     });
 
 
-      toast({
-        title: "Tarif ajouté",
-        description: `Le tarif ${nouveau.dateFacturation} a été ajouté.`,
-      });
+  //     toast({
+  //       title: "Tarif ajouté",
+  //       description: `Le tarif ${nouveau.dateFacturation} a été ajouté.`,
+  //     });
 
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error?.message || "Impossible d’ajouter le tarif.",
-        variant: "destructive",
-      });
-    }
-  };
+  //   } catch (error: any) {
+  //     toast({
+  //       title: "Erreur",
+  //       description: error?.message || "Impossible d’ajouter le tarif.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
 
   const renderContent = () => (
     <div className="w-full">
       {!isFullPage && (
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">{renderOrNull(societe.name)}</h2>
+          <h2 className="text-2xl font-bold">{renderOrNull(societeState.name)}</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -278,9 +318,9 @@ const SocieteDetails = ({
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="infos">Informations</TabsTrigger>
-          {canManageFactures && <TabsTrigger value="factures">Factures</TabsTrigger>}
+          {/* {canManageFactures && <TabsTrigger value="factures">Factures</TabsTrigger>} */}
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="taches">Tâches</TabsTrigger>
         </TabsList>
@@ -356,7 +396,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.name} onChange={e => setDraft("name", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.name)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.name)}</p>
                   )}
                 </div>
                 <div>
@@ -374,7 +414,7 @@ const SocieteDetails = ({
                       ))}
                     </select>
                   ) : (
-                    <Badge variant="outline">{renderOrNull(societe.formeJuridique)}</Badge>
+                    <Badge variant="outline">{renderOrNull(societeState.formeJuridique)}</Badge>
                   )}
                 </div>
                 <div>
@@ -382,7 +422,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.siret} onChange={e => setDraft("siret", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.siret)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.siret)}</p>
                   )}
                 </div>
                 <div>
@@ -390,7 +430,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.rcs} onChange={e => setDraft("rcs", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.rcs)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.rcs)}</p>
                   )}
                 </div>
                 <div>
@@ -398,26 +438,66 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.codeNaf} onChange={e => setDraft("codeNaf", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.codeNaf)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.codeNaf)}</p>
                   )}
                 </div>
-                <div>
+                <div ref={activiteRef}>
                   <label className="font-medium text-gray-700">Activité</label>
                   {isEditingInfos ? (
-                    <select
-                      className="w-full rounded-md border px-3 py-2 text-sm"
-                      value={infosDraft.activite}
-                      onChange={(e) => setDraft("activite", e.target.value)}
-                    >
-                      {activitesPrincipales.map((a) => (
-                        <option key={a.id} value={String(a.id)}>
-                          {a.libelle}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <Input
+                        placeholder="Rechercher une activité..."
+                        value={showActiviteDropdown ? activiteSearch : selectedActiviteName}
+                        onChange={(e) => {
+                          setActiviteSearch(e.target.value);
+                          setShowActiviteDropdown(true);
+                        }}
+                        onFocus={() => setShowActiviteDropdown(true)}
+                        className="pr-10"
+                        autoComplete="off"
+                      />
+                      <ChevronDown 
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer"
+                        onClick={() => setShowActiviteDropdown(!showActiviteDropdown)}
+                      />
+                      
+                      {showActiviteDropdown && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-input rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {filteredActivites.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-gray-500">Aucune activité trouvée</div>
+                          ) : (
+                            <>
+                              {(activiteSearch ? filteredActivites : filteredActivites.slice(0, 5)).map((activite) => (
+                                <div
+                                  key={activite.id}
+                                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                                    Number(infosDraft.activite) === activite.id ? "bg-blue-100" : ""
+                                  }`}
+                                  onClick={() => {
+                                    setDraft("activite", String(activite.id));
+                                    setActiviteSearch("");
+                                    setShowActiviteDropdown(false);
+                                  }}
+                                >
+                                  <span>{activite.name}</span>
+                                  {Number(infosDraft.activite) === activite.id && (
+                                    <Check className="h-4 w-4 text-blue-600" />
+                                  )}
+                                </div>
+                              ))}
+                              {!activiteSearch && filteredActivites.length > 5 && (
+                                <div className="px-3 py-2 text-xs text-gray-400 border-t">
+                                  Tapez pour voir les {filteredActivites.length - 5} autres activités...
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-gray-900">
-                      {activitesPrincipales.find(a => a.id === societe.activiteId)?.libelle ?? "—"}
+                      {displayActiviteName}
                     </p>
                   )}
                 </div>
@@ -425,7 +505,7 @@ const SocieteDetails = ({
                   <label className="font-medium text-gray-700">Date de création</label>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4 text-gray-400" />
-                    <p className="text-gray-900">{renderDate(societe.dateCreation)}</p>
+                    <p className="text-gray-900">{renderDate(societeState.dateCreation)}</p>
                   </div>
                 </div>
                 <div>
@@ -436,7 +516,7 @@ const SocieteDetails = ({
                     ) : (
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        <p className="text-gray-900">{renderDate(societe.dateCloture1)}</p>
+                        <p className="text-gray-900">{renderDate(societeState.dateCloture1)}</p>
                       </div>
                     )}
                   </div>
@@ -449,7 +529,7 @@ const SocieteDetails = ({
                   ) : (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <p className="text-gray-900">{renderDate(societe.dateSignatureMission)}</p>
+                      <p className="text-gray-900">{renderDate(societeState.dateSignatureMission)}</p>
                     </div>
                   )}
                 </div>
@@ -461,7 +541,7 @@ const SocieteDetails = ({
                   ) : (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <p className="text-gray-900">{renderDate(societe.dateRepriseMission)}</p>
+                      <p className="text-gray-900">{renderDate(societeState.dateRepriseMission)}</p>
                     </div>
                   )}
                 </div>
@@ -470,7 +550,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.regimeTva} onChange={e => setDraft("regimeTva", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.regimeTva)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.regimeTva)}</p>
                   )}
                 </div>
                 <div>
@@ -478,7 +558,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.regimeImposition} onChange={e => setDraft("regimeImposition", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.regimeImposition)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.regimeImposition)}</p>
                   )}
                 </div>
 
@@ -490,7 +570,7 @@ const SocieteDetails = ({
                   ) : (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <p className="text-gray-900">{renderDate(societe.dateDebutFacturation)}</p>
+                      <p className="text-gray-900">{renderDate(societeState.dateDebutFacturation)}</p>
                     </div>
                   )}
                 </div>
@@ -509,7 +589,7 @@ const SocieteDetails = ({
               {isEditingInfos ? (
                 <Input value={infosDraft.siegeSocial} onChange={e => setDraft("siegeSocial", e.target.value)} />
               ) : (
-                <p className="text-gray-900">{renderOrNull(societe.siegeSocial)}</p>
+                <p className="text-gray-900">{renderOrNull(societeState.siegeSocial)}</p>
               )}
             </CardContent>
           </Card>
@@ -531,7 +611,7 @@ const SocieteDetails = ({
                   </div>
                 ) : (
                   <p className="text-gray-900">
-                    {renderOrNull(societe.dirigeantPrenom)} {renderOrNull(societe.dirigeantNom)}
+                    {renderOrNull(societeState.dirigeantPrenom)} {renderOrNull(societeState.dirigeantNom)}
                   </p>
                 )}
               </div>
@@ -540,7 +620,7 @@ const SocieteDetails = ({
                 {isEditingInfos ? (
                   <Input type="email" value={infosDraft.email} onChange={e => setDraft("email", e.target.value)} />
                 ) : (
-                  <p className="text-gray-900">{renderOrNull(societe.email)}</p>
+                  <p className="text-gray-900">{renderOrNull(societeState.email)}</p>
                 )}
               </div>
               <div>
@@ -548,7 +628,7 @@ const SocieteDetails = ({
                 {isEditingInfos ? (
                   <Input value={infosDraft.telephone} onChange={e => setDraft("telephone", e.target.value)} />
                 ) : (
-                  <p className="text-gray-900">{renderOrNull(societe.telephone)}</p>
+                  <p className="text-gray-900">{renderOrNull(societeState.telephone)}</p>
                 )}
               </div>
             </CardContent>
@@ -573,7 +653,7 @@ const SocieteDetails = ({
                     </div>
                   ) : (
                     <p className="text-gray-900">
-                      {renderOrNull(societe.responsable)}
+                      {renderOrNull(societeState.responsable)}
                     </p>
                   )}
                 </div>
@@ -585,7 +665,7 @@ const SocieteDetails = ({
                     </div>
                   ) : (
                     <p className="text-gray-900">
-                      {renderOrNull(societe.frontOffice)}
+                      {renderOrNull(societeState.frontOffice)}
                     </p>
                   )}
                 </div>
@@ -594,7 +674,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.collaborateurCompta} onChange={e => setDraft("collaborateurCompta", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.collaborateurCompta)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.collaborateurCompta)}</p>
                   )}
                 </div>
                 <div>
@@ -602,7 +682,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.collaborateurSocial} onChange={e => setDraft("collaborateurSocial", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.collaborateurSocial)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.collaborateurSocial)}</p>
                   )}
                 </div>
                 <div>
@@ -610,7 +690,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.intervenant} onChange={e => setDraft("intervenant", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.intervenant)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.intervenant)}</p>
                   )}
                 </div>
                 <div>
@@ -618,7 +698,7 @@ const SocieteDetails = ({
                   {isEditingInfos ? (
                     <Input value={infosDraft.ancienEC} onChange={e => setDraft("ancienEC", e.target.value)} />
                   ) : (
-                    <p className="text-gray-900">{renderOrNull(societe.ancienEC)}</p>
+                    <p className="text-gray-900">{renderOrNull(societeState.ancienEC)}</p>
                   )}
                 </div>
               </div>
@@ -626,7 +706,7 @@ const SocieteDetails = ({
           </Card>
 
           {/* Tarifaction */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BadgeEuro className="h-5 w-5" />
@@ -635,7 +715,6 @@ const SocieteDetails = ({
             </CardHeader>
 
             <CardContent className="space-y-6">
-              {/* Liste des tarifs liés */}
               <div>
                 <h4 className="text-base font-semibold mb-3">Historique des tarifs</h4>
 
@@ -677,7 +756,6 @@ const SocieteDetails = ({
                                   </span>
                                 </td>
 
-                                {/* ✅ corrige le <p> en <td> */}
                                 <td className="py-2.5 px-3 text-gray-700">
                                   {renderDate(t.dateDebut)}
                                 </td>
@@ -709,7 +787,6 @@ const SocieteDetails = ({
               </div>
 
 
-              {/* Formulaire d’ajout d’un nouveau tarif */}
               <form onSubmit={handleSubmitNewTarif}>
                 <div className="rounded-xl border p-4 md:p-5 bg-gray-50">
                   <h4 className="text-sm font-semibold mb-4">Ajouter un nouveau tarif</h4>
@@ -814,7 +891,7 @@ const SocieteDetails = ({
 
 
             </CardContent>
-          </Card>
+          </Card> */}
 
         </TabsContent>
 

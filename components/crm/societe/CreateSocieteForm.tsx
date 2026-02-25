@@ -1,25 +1,64 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Save } from "lucide-react";
-import {
-  activitesPrincipales,
-  formatsJuridiques,
-} from "@/data/mockData";
+import { Building, Save, ChevronDown, Check } from "lucide-react";
+import { formatsJuridiques } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api";
+import { getAllActivites, Activite } from "@/lib/api/activite";
 
 export default function CreateSocieteForm() {
   const { toast } = useToast();
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // États pour les activités
+  const [activites, setActivites] = useState<Activite[]>([]);
+  const [activiteSearch, setActiviteSearch] = useState("");
+  const [showActiviteDropdown, setShowActiviteDropdown] = useState(false);
+  const activiteRef = useRef<HTMLDivElement>(null);
+
+  // Charger les activités depuis l'API
+  useEffect(() => {
+    getAllActivites()
+      .then((data) => {
+        // Trier par ordre alphabétique
+        const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
+        setActivites(sorted);
+      })
+      .catch(() => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les activités.",
+          variant: "destructive",
+        });
+      });
+  }, []);
+
+  // Fermer le dropdown si clic à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activiteRef.current && !activiteRef.current.contains(event.target as Node)) {
+        setShowActiviteDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filtrer les activités selon la recherche
+  const filteredActivites = activites.filter((a) =>
+    a.name.toLowerCase().includes(activiteSearch.toLowerCase())
+  );
 
   const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   const isSiret = (v: string) => /^\d{14}$/.test(v.replace(/\s/g, ""));
@@ -81,6 +120,9 @@ export default function CreateSocieteForm() {
     responsable :"",
   });
 
+  // Obtenir le nom de l'activité sélectionnée
+  const selectedActiviteName = activites.find((a) => a.id === societeData.activiteId)?.name || "";
+
   const handleSocieteChange = (field: any, value: any) => setSocieteData(prev => ({ ...prev, [field]: value }));
 
   const formeByFormatId: Record<number, "SARL" | "SAS" | "SASU" | "EURL" | "SCI" | "EI"> = {
@@ -137,25 +179,30 @@ export default function CreateSocieteForm() {
       iban: societeData.iban.trim() || undefined,
       bic: societeData.bic.trim() || undefined,
       ancienEC: societeData.ancienEC.trim() || undefined,
-      frontOffice: societeData.frontOffice.trim() || "",
-      intervenant: societeData.intervenant.trim() || "",
-      collaborateurComptable: societeData.collaborateurComptable.trim() || "",
-      collaborateurSocial: societeData.collaborateurSocial.trim() || "",
-      responsable : societeData.responsable.trim() || "",
+      frontOffice: societeData.frontOffice.trim() || undefined,
+      intervenant: societeData.intervenant.trim() || undefined,
+      collaborateurComptable: societeData.collaborateurComptable.trim() || undefined,
+      collaborateurSocial: societeData.collaborateurSocial.trim() || undefined,
+      responsable: societeData.responsable.trim() || undefined,
     };
 
   
     try {
-      await apiPost("/societe", payload);
+      const newSociete = await apiPost<{ id: number }>("/societe", payload);
       setCreated(true);
-      toast({ title: "Société créée", description: "La nouvelle société a été créée." });
+      toast({ title: "Société créée", description: "La nouvelle société a été créée. Redirection..." });
+      
+      // Rediriger vers la page de la société après 1 seconde
+      setTimeout(() => {
+        router.push(`/societe/${newSociete.id}`);
+      }, 1000);
     } catch (err: any) {
       toast({
         title: "Erreur",
-        description: err?.message || "Erreur lors de la création.",
+        description: err?.response?.data?.message || err?.message || "Erreur lors de la création.",
         variant: "destructive",
       });
-    }  finally {
+    } finally {
       setSubmitting(false);
     }
   };
@@ -328,23 +375,64 @@ export default function CreateSocieteForm() {
             </select>
             {errors.formatId && <p className="text-sm text-destructive">{errors.formatId}</p>}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" ref={activiteRef}>
             <Label>Activité principale <Req /></Label>
-            <select
-            id="activiteId"
-              className={`w-full rounded-md border px-3 py-2 text-sm ${errors.activiteId ? "border-destructive" : "border-input"} `}  value={societeData.activiteId}
-              onChange={(e) =>
-                handleSocieteChange("activiteId", parseInt(e.target.value))
-              }
-            >
-              {activitesPrincipales.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.libelle}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <Input
+                id="activiteId"
+                placeholder="Rechercher une activité..."
+                value={showActiviteDropdown ? activiteSearch : selectedActiviteName}
+                onChange={(e) => {
+                  setActiviteSearch(e.target.value);
+                  setShowActiviteDropdown(true);
+                }}
+                onFocus={() => setShowActiviteDropdown(true)}
+                className={`pr-10 ${errors.activiteId ? "border-destructive" : ""}`}
+                aria-invalid={!!errors.activiteId}
+                autoComplete="off"
+              />
+              <ChevronDown 
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer"
+                onClick={() => setShowActiviteDropdown(!showActiviteDropdown)}
+              />
+              
+              {showActiviteDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-input rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {filteredActivites.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500">Aucune activité trouvée</div>
+                  ) : (
+                    <>
+                      {/* Afficher les 5 premières ou toutes si recherche */}
+                      {(activiteSearch ? filteredActivites : filteredActivites.slice(0, 5)).map((activite) => (
+                        <div
+                          key={activite.id}
+                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                            societeData.activiteId === activite.id ? "bg-blue-100" : ""
+                          }`}
+                          onClick={() => {
+                            handleSocieteChange("activiteId", activite.id);
+                            setActiviteSearch("");
+                            setShowActiviteDropdown(false);
+                          }}
+                        >
+                          <span>{activite.name}</span>
+                          {societeData.activiteId === activite.id && (
+                            <Check className="h-4 w-4 text-blue-600" />
+                          )}
+                        </div>
+                      ))}
+                      {/* Afficher le nombre d'autres activités disponibles */}
+                      {!activiteSearch && filteredActivites.length > 5 && (
+                        <div className="px-3 py-2 text-xs text-gray-400 border-t">
+                          Tapez pour voir les {filteredActivites.length - 5} autres activités...
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
             {errors.activiteId && <p className="text-sm text-destructive">{errors.activiteId}</p>}
-
           </div>
           
         </div>

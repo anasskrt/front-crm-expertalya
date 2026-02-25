@@ -24,6 +24,7 @@ const Navigation = () => {
     { path: "/collaborateur", label: "Tâches des collabos", icon: Users },
     { path: "/societe/archiver", label: "Sociétés Archivées", icon: Building },
     { path: "/excel", label: "Tableau exporté", icon: Table2  },
+    { path: "/activités", label: "Liste des activités", icon: Table2  },
 
 
 ]
