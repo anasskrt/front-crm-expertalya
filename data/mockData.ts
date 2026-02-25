@@ -1,14 +1,11 @@
-// Activités principales
-export const activitesPrincipales = [
-  { id: 1, libelle: "Livraison" },
-  { id: 2, libelle: "Restaurant" },
-  // Ajoute d'autres activités si besoin
-];
-
 // Formats juridiques
 export const formatsJuridiques = [
   { id: 1, format: "SARL" },
   { id: 2, format: "SAS" },
+  { id: 3, format: "SASU" },
+  { id: 4, format: "EURL" },
+  { id: 5, format: "SCI" },
+  { id: 6, format: "EI" },
 ];
 
 // Modes de paiement
@@ -171,13 +168,6 @@ export interface Cabinet {
     { id: 3, format: "EURL" },
     { id: 4, format: "SASU" },
   ];
-  
-  export const mockActivitesPrincipales: ActivitePrincipale[] = [
-    { id: 1, libelle: "Commerce de détail" },
-    { id: 2, libelle: "Services aux entreprises" },
-    { id: 3, libelle: "Industrie manufacturière" },
-  ];
-  
 
   
   export const mockStatusContacts: StatusContact[] = [
