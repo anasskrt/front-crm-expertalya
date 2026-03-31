@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Building, UserCog, Plus, Home, CheckSquare, FileText, Table2 } from "lucide-react";
+import { Users, Building, UserCog, Plus, Home, Table2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import NotificationBell from "@/components/crm/NotificationBell";
 

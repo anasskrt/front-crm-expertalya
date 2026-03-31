@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { proxyRequest } from "@/lib/proxy";
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return proxyRequest(request, `/typemission/${params.id}`);
+interface Params {
+  params: Promise<{ id: string }>;
+}
+
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const { id } = await params;
+  return proxyRequest(request, `/typemission/${id}`);
 }

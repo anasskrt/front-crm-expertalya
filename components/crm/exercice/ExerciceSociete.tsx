@@ -672,7 +672,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
                                     
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm ml-8">
                                       <div>
-                                        <span className="text-gray-500">Date d'échéance:</span>{" "}
+                                        <span className="text-gray-500">Date d&apos;échéance:</span>{" "}
                                         <span className="font-medium">
                                           {formatDate(mission.dateEcheance)}
                                         </span>
@@ -1022,7 +1022,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
             </div>
             
             <div>
-              <label className="text-sm font-medium">Date d'échéance</label>
+              <label className="text-sm font-medium">Date d&apos;échéance</label>
               <Input
                 type="date"
                 value={missionForm.dateEcheance}

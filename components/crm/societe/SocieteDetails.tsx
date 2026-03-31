@@ -10,7 +10,6 @@ import {
   Building,
   MapPin,
   Calendar,
-  FileText,
   User,
   X,
   ChevronDown,
