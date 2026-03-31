@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Building, UserCog, Plus, Home, CheckSquare, FileText, Table2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import NotificationBell from "@/components/crm/NotificationBell";
 
 const Navigation = () => {
   const pathname = usePathname();
@@ -15,16 +16,17 @@ const Navigation = () => {
     { path: "/societe", label: "Sociétés", icon: Building },
     { path: "/profil", label: "Profil & Favoris", icon: UserCog },
     { path: "/societe/nouveau", label: "Nouvelle Société", icon: Plus },
-    { path: "/taches", label: "Gestions des tâches", icon: CheckSquare },
-// Factures et utilisateurs visibles seulement pour MANAGER ou ADMIN
+    { path: "/exercice", label: "Vos missions", icon: Table2  },
+// utilisateurs visibles seulement pour MANAGER ou ADMIN
     ...(currentUser && currentUser.role == 1
       ? [
-    { path: "/gestion-facture", label: "Gestions des factures", icon: FileText },
     { path: "/utilisateur", label: "Gestions des utilisateurs", icon: Users },
-    { path: "/collaborateur", label: "Tâches des collabos", icon: Users },
     { path: "/societe/archiver", label: "Sociétés Archivées", icon: Building },
     { path: "/excel", label: "Tableau exporté", icon: Table2  },
-    { path: "/activités", label: "Liste des activités", icon: Table2  },
+    { path: "/activite", label: "Liste des activités", icon: Table2  },
+    { path: "/exercice/collaborateur", label: "Liste des exercices collaborateurs", icon: Table2  },
+    { path: "/typemission", label: "Types de mission", icon: Table2  },
+
 
 
 ]
@@ -34,7 +36,8 @@ const Navigation = () => {
   return (
     <Card className="mb-6">
       <CardContent className="p-4">
-        <nav className="flex flex-wrap gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <nav className="flex flex-wrap gap-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.path;
@@ -53,7 +56,9 @@ const Navigation = () => {
               </Link>
             );
           })}
-        </nav>
+          </nav>
+          <NotificationBell />
+        </div>
       </CardContent>
     </Card>
   );

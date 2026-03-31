@@ -59,7 +59,7 @@ export default function SocieteArchiverManagement() {
       if (!full.includes(dirigeant.toLowerCase())) return false;
     }
     if (dateClotureDebut || dateClotureFin) {
-      const dc = new Date(s.dateCloture1);
+      const dc = new Date(s.dateCloturePlusAncienExercice);
       if (dateClotureDebut && dc < new Date(dateClotureDebut)) return false;
       if (dateClotureFin && dc > new Date(dateClotureFin)) return false;
     }
@@ -136,7 +136,7 @@ export default function SocieteArchiverManagement() {
           label:"Docs OK"
         },{
           icon:<Calendar className="h-8 w-8 text-orange-600"/>,
-          value:filteredSocietes.filter(s=>new Date(s.dateCloture1)<new Date(Date.now()+30*24*60*60*1000)).length,
+          value:filteredSocietes.filter(s=>new Date(s.dateCloturePlusAncienExercice)<new Date(Date.now()+30*24*60*60*1000)).length,
           label:"Clôtures proches"
         }].map((stat,i)=>(
           <Card key={i}><CardContent className="p-4 flex items-center gap-2">{stat.icon}<div><p className="text-2xl font-bold">{stat.value}</p><p className="text-sm text-gray-600">{stat.label}</p></div></CardContent></Card>
@@ -169,7 +169,7 @@ export default function SocieteArchiverManagement() {
             <CardContent className="space-y-3 text-sm">
               <div>SIRET: <span className="text-gray-600">{s.siret}</span></div>
               <div className="flex items-center gap-1"><MapPin className="h-4 w-4 text-gray-400"/>{s.siegeSocial}</div>
-              <div className="flex items-center gap-1"><Calendar className="h-4 w-4 text-gray-400"/>Clôture: {new Date(s.dateCloture1).toLocaleDateString()}</div>
+              <div className="flex items-center gap-1"><Calendar className="h-4 w-4 text-gray-400"/>Clôture: {new Date(s.dateCloturePlusAncienExercice).toLocaleDateString()}</div>
               <div>Dirigeant: <span className="text-gray-600">{s.dirigeantPrenom} {s.dirigeantNom}</span></div>
               <div>Activité: <span className="texay-600">{s.activite?.name}</span></div>
               <div className="flex gap--3 border-t">

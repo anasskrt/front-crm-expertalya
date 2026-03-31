@@ -20,7 +20,6 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import FactureGestion from "../facture/FactureGestion";
 import { Societe } from "@/data/data";
 import { apiPatch } from "@/lib/api";
 
@@ -29,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatsJuridiques } from "@/data/mockData";
 import { getAllActivites, Activite } from "@/lib/api/activite";
 import SocieteDocuments from "../Document/Document";
-import SocieteTaches from "../tache/TacheSociete";
+import ExerciceSociete from "../exercice/ExerciceSociete";
 
 
 interface SocieteDetailsProps {
@@ -61,8 +60,6 @@ const SocieteDetails = ({
       return "null";
     }
   };
-
-  const canManageFactures = true;
 
   const { toast } = useToast();
 
@@ -239,73 +236,6 @@ const SocieteDetails = ({
     }
   };
 
-  //tarif 
-  // const [tarifs, setTarifs] = useState((societe as any).tarifs || []);
-
-  // const [newTarif, setNewTarif] = useState({
-  //   dateFacturation: "",
-  //   montantCompta: "",
-  //   montantSocial: "",
-  //   montantRattrapage: "",
-  //   montantAutres: "",
-  //   dateDebut: "",
-  // });
-
-  // const handleNewTarifChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-  //   setNewTarif((prev) => ({ ...prev, [name]: value }));
-  // };
-
-  // const handleSubmitNewTarif = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   const nouveau = {
-  //     id: Math.floor(Math.random() * 1000000),
-  //     dateFacturation: newTarif.dateFacturation,
-  //     montantCompta: Number(newTarif.montantCompta) || 0,
-  //     montantSocial: Number(newTarif.montantSocial) || 0,
-  //     montantRattrapage: Number(newTarif.montantRattrapage) || 0,
-  //     montantAutres: Number(newTarif.montantAutres) || 0,
-  //     actif: true,
-  //     dateDebut: newTarif.dateDebut || "",
-  //   };
-  //   try {
-  //     const created = await apiPost<any>(`/tarif/${societe.id}`, nouveau);
-
-  //     const newTarifEntity = created && created.id ? created : nouveau;
-
-  //     // Tous les anciens deviennent inactifs, on ajoute le nouveau actif
-  //     setTarifs((prev: any[]) => {
-  //       const updated = prev.map((t) => ({ ...t, actif: false }));
-  //       // 🔹 Le nouveau tarif est ajouté en premier dans la liste
-  //       return [newTarifEntity, ...updated];
-  //     });
-
-  //     setNewTarif({
-  //       dateFacturation: "",
-  //       montantCompta: "",
-  //       montantSocial: "",
-  //       montantRattrapage: "",
-  //       montantAutres: "",
-  //       dateDebut: "",
-  //     });
-
-
-  //     toast({
-  //       title: "Tarif ajouté",
-  //       description: `Le tarif ${nouveau.dateFacturation} a été ajouté.`,
-  //     });
-
-  //   } catch (error: any) {
-  //     toast({
-  //       title: "Erreur",
-  //       description: error?.message || "Impossible d’ajouter le tarif.",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-
   const renderContent = () => (
     <div className="w-full">
       {!isFullPage && (
@@ -320,9 +250,8 @@ const SocieteDetails = ({
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="infos">Informations</TabsTrigger>
-          {/* {canManageFactures && <TabsTrigger value="factures">Factures</TabsTrigger>} */}
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="taches">Tâches</TabsTrigger>
+          <TabsTrigger value="exercices">Exercices</TabsTrigger>
         </TabsList>
 
         {/* Onglet Informations */}
@@ -705,226 +634,17 @@ const SocieteDetails = ({
             </CardContent>
           </Card>
 
-          {/* Tarifaction */}
-          {/* <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BadgeEuro className="h-5 w-5" />
-                Tarification
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="text-base font-semibold mb-3">Historique des tarifs</h4>
-
-                {tarifs.length > 0 ? (
-                  <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-                    <div className="max-h-[360px] overflow-auto">
-                      <table className="min-w-full text-sm">
-                        <thead className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/75 border-b">
-                          <tr className="text-left text-gray-600">
-                            <th className="py-2.5 px-3 font-medium">Intitulé</th>
-                            <th className="py-2.5 px-3 font-medium">Date début</th>
-                            <th className="py-2.5 px-3 font-medium text-right">Compta (€)</th>
-                            <th className="py-2.5 px-3 font-medium text-right">Social (€)</th>
-                            <th className="py-2.5 px-3 font-medium text-right">Rattrapage (€)</th>
-                            <th className="py-2.5 px-3 font-medium text-right">Autres (€)</th>
-                          </tr>
-                        </thead>
-
-                        <tbody className="divide-y divide-gray-100">
-                          {[...tarifs].map((t: any) => {
-                            const isActive = !!t.actif;
-                            return (
-                              <tr
-                                key={t.id}
-                                className={[
-                                  "transition-colors",
-                                  "hover:bg-emerald-50/40",
-                                  isActive ? "bg-emerald-50 ring-1 ring-emerald-200/60" : "",
-                                ].join(" ")}
-                              >
-                                <td className="py-2.5 px-3 font-medium text-gray-800">
-                                  <span className="inline-flex items-center gap-2">
-                                    {t.dateFacturation}
-                                    {isActive && (
-                                      <span className="text-[11px] inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5">
-                                        Actif
-                                      </span>
-                                    )}
-                                  </span>
-                                </td>
-
-                                <td className="py-2.5 px-3 text-gray-700">
-                                  {renderDate(t.dateDebut)}
-                                </td>
-
-                                <td className="py-2.5 px-3 text-right tabular-nums font-medium text-gray-900">
-                                  {t.montantCompta} €
-                                </td>
-                                <td className="py-2.5 px-3 text-right tabular-nums font-medium text-gray-900">
-                                  {t.montantSocial} €
-                                </td>
-                                <td className="py-2.5 px-3 text-right tabular-nums text-gray-800">
-                                  {t.montantRattrapage} €
-                                </td>
-                                <td className="py-2.5 px-3 text-right tabular-nums text-gray-800">
-                                  {t.montantAutres} €
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-600 bg-gray-50">
-                    Aucun tarif enregistré pour cette société.
-                  </div>
-                )}
-              </div>
-
-
-              <form onSubmit={handleSubmitNewTarif}>
-                <div className="rounded-xl border p-4 md:p-5 bg-gray-50">
-                  <h4 className="text-sm font-semibold mb-4">Ajouter un nouveau tarif</h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
-                    <div className="flex flex-col gap-1 md:col-span-2">
-                      <label htmlFor="dateFacturation" className="text-sm text-gray-700">
-                        Intitulé facture
-                      </label>
-                      <input
-                        type="text"
-                        name="dateFacturation"
-                        id="dateFacturation"
-                        placeholder="ex: 2025 - janvier à février"
-                        value={newTarif.dateFacturation}
-                        onChange={handleNewTarifChange}
-                        className="input focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <label htmlFor="montantCompta" className="text-sm text-gray-700">Tarif compta</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        name="montantCompta"
-                        id="montantCompta"
-                        placeholder="ex: 100"
-                        value={newTarif.montantCompta}
-                        onChange={handleNewTarifChange}
-                        className="input focus-visible:ring-2 focus-visible:ring-emerald-500 text-right tabular-nums"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <label htmlFor="montantSocial" className="text-sm text-gray-700">Tarif social</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        name="montantSocial"
-                        id="montantSocial"
-                        placeholder="ex: 100"
-                        value={newTarif.montantSocial}
-                        onChange={handleNewTarifChange}
-                        className="input focus-visible:ring-2 focus-visible:ring-emerald-500 text-right tabular-nums"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <label htmlFor="montantRattrapage" className="text-sm text-gray-700">Rattrapage</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        name="montantRattrapage"
-                        id="montantRattrapage"
-                        placeholder="ex: 100"
-                        value={newTarif.montantRattrapage}
-                        onChange={handleNewTarifChange}
-                        className="input focus-visible:ring-2 focus-visible:ring-emerald-500 text-right tabular-nums"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <label htmlFor="montantAutres" className="text-sm text-gray-700">Autres</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        name="montantAutres"
-                        id="montantAutres"
-                        placeholder="ex: 100"
-                        value={newTarif.montantAutres}
-                        onChange={handleNewTarifChange}
-                        className="input focus-visible:ring-2 focus-visible:ring-emerald-500 text-right tabular-nums"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1 md:col-span-2">
-                      <label htmlFor="dateDebut" className="text-sm text-gray-700">Date début</label>
-                      <input
-                        type="date"
-                        name="dateDebut"
-                        id="dateDebut"
-                        value={newTarif.dateDebut}
-                        onChange={handleNewTarifChange}
-                        className="input focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
-                      Ajouter le tarif
-                    </Button>
-                  </div>
-                </div>
-              </form>
-
-
-
-            </CardContent>
-          </Card> */}
-
         </TabsContent>
-
-        {/* Onglet Factures */}
-        {canManageFactures && (
-          <TabsContent value="factures">
-            <FactureGestion societeId={societe.id} />
-          </TabsContent>
-        )}
 
         {/* Onglet Documents */}
         <TabsContent value="documents" className="space-y-4">
           <SocieteDocuments societeId={societe.id} />
         </TabsContent>
 
-
-        {/* Onglet Tache */}
-        <TabsContent value="taches" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Tâches liées à la société
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SocieteTaches societeId={societe.id} />
-            </CardContent>
-          </Card>
+        {/* Onglet Exercices */}
+        <TabsContent value="exercices" className="space-y-4">
+          <ExerciceSociete societeId={societe.id} />
         </TabsContent>
-
-
-
       </Tabs>
     </div>
   );

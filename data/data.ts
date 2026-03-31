@@ -94,7 +94,7 @@ export interface SocieteShort {
     name: string
     formeJuridique: FormeJuridique
     siret: string
-    dateCloture1: string
+    dateCloturePlusAncienExercice: string
     activite?: Activite
     dirigeantNom: string
     dirigeantPrenom: string
@@ -103,6 +103,12 @@ export interface SocieteShort {
     updatedAt: string
     siegeSocial : string
     hasOngoingTask: boolean
+    exercicesTotal: number;
+    exercicesNonTerminees: number;
+    exercicesNonAttribues: boolean;
+    missionsTotal: number;
+    missionsNonTerminees: number;
+    missionsNonAttribuees: number;
 }
   
 

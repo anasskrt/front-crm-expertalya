@@ -79,7 +79,7 @@ export default function CreateSocieteForm() {
     if (!isNotEmpty(societeData.code_naf)) e.code_naf = "Obligatoire";
     if (!isNotEmpty(societeData.formatId)) e.formatId = "Obligatoire";
     if (!isNotEmpty(societeData.activiteId)) e.activiteId = "Obligatoire";
-    if (!isNotEmpty(societeData.dateCloture1)) e.dateCloture1 = "Obligatoire";
+    if (!isNotEmpty(societeData.dateCloture)) e.dateCloture = "Obligatoire";
 
     return e;
   };
@@ -95,7 +95,7 @@ export default function CreateSocieteForm() {
     activiteId: 1,
     id_cabinet: 1,
     mode_paiement: 3,
-    dateCloture1: "",
+    dateCloture: "",
     dirigeantNom: "",
     dirigeantPrenom: "",
     telephone: "",
@@ -114,10 +114,6 @@ export default function CreateSocieteForm() {
 
     // --- gestion cabinet ---
     frontOffice: "",
-    intervenant: "",
-    collaborateurComptable: "",
-    collaborateurSocial: "",
-    responsable :"",
   });
 
   // Obtenir le nom de l'activité sélectionnée
@@ -161,7 +157,7 @@ export default function CreateSocieteForm() {
       codeNaf: societeData.code_naf.trim(),
       activiteId: Number(societeData.activiteId),
       dateCreation: new Date().toISOString(),
-      dateCloture1: new Date(`${societeData.dateCloture1}T00:00:00.000Z`).toISOString(),
+      dateCloture: new Date(`${societeData.dateCloture}T00:00:00.000Z`).toISOString(),
       telephone: societeData.telephone.trim(),
       email: societeData.email.trim(),
   
@@ -180,10 +176,6 @@ export default function CreateSocieteForm() {
       bic: societeData.bic.trim() || undefined,
       ancienEC: societeData.ancienEC.trim() || undefined,
       frontOffice: societeData.frontOffice.trim() || undefined,
-      intervenant: societeData.intervenant.trim() || undefined,
-      collaborateurComptable: societeData.collaborateurComptable.trim() || undefined,
-      collaborateurSocial: societeData.collaborateurSocial.trim() || undefined,
-      responsable: societeData.responsable.trim() || undefined,
     };
 
   
@@ -442,16 +434,16 @@ export default function CreateSocieteForm() {
         <div className="flex flex-col gap-2">
             <Label>Date de clôture <Req /></Label>
             <Input
-              id="dateCloture1"
+              id="dateCloture"
               type="date"
-              value={societeData.dateCloture1}
+              value={societeData.dateCloture}
               onChange={(e) =>
-                handleSocieteChange("dateCloture1", e.target.value)
+                handleSocieteChange("dateCloture", e.target.value)
               }
-              className={errors.dateCloture1 ? "border-destructive" : ""}
-              aria-invalid={!!errors.dateCloture1}
+              className={errors.dateCloture ? "border-destructive" : ""}
+              aria-invalid={!!errors.dateCloture}
             />
-            {errors.dateCloture1 && <p className="text-sm text-destructive">{errors.dateCloture1}</p>}
+            {errors.dateCloture && <p className="text-sm text-destructive">{errors.dateCloture}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label>Mode de paiement <Req /></Label>
@@ -570,47 +562,6 @@ export default function CreateSocieteForm() {
                 />
             </div>
           
-            <div className="flex flex-col gap-2">
-              <Label>Responsable</Label>
-              <Input
-                id="responsable"
-                placeholder="Nom et prénom"
-                value={societeData.responsable}
-                onChange={(e) =>
-                  handleSocieteChange("responsable", e.target.value)
-                }
-
-              />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-                <Label>Collaborateur Comptable</Label>
-                <Input
-                  id="collaborateurComptable"
-                  placeholder="Nom et prénom"
-                  value={societeData.collaborateurComptable}
-                  onChange={(e) =>
-                    handleSocieteChange("collaborateurComptable", e.target.value)
-                  }
-                />
-            </div>
-          
-            <div className="flex flex-col gap-2">
-              <Label>Collaborateur Social</Label>
-              <Input
-                id="collaborateurSocial"
-                placeholder="Nom et prénom"
-                value={societeData.collaborateurSocial}
-                onChange={(e) =>
-                  handleSocieteChange("collaborateurSocial", e.target.value)
-                }
-              />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
               <Label>Ancien E.C.</Label>
               <Input
@@ -619,18 +570,6 @@ export default function CreateSocieteForm() {
                 value={societeData.ancienEC}
                 onChange={(e) =>
                   handleSocieteChange("ancienEC", e.target.value)
-                }
-              />
-          </div>
-
-          <div className="flex flex-col gap-2">
-              <Label>Intervenant</Label>
-              <Input
-                id="intervenant"
-                placeholder="Nom et prénom"
-                value={societeData.intervenant}
-                onChange={(e) =>
-                  handleSocieteChange("intervenant", e.target.value)
                 }
               />
           </div>

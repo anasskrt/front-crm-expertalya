@@ -60,7 +60,7 @@ export default function SocieteManagement() {
       if (!full.includes(dirigeant.toLowerCase())) return false;
     }
     if (dateClotureDebut || dateClotureFin) {
-      const dc = new Date(s.dateCloture1);
+      const dc = new Date(s.dateCloturePlusAncienExercice);
       if (dateClotureDebut && dc < new Date(dateClotureDebut)) return false;
       if (dateClotureFin && dc > new Date(dateClotureFin)) return false;
     }
@@ -104,7 +104,7 @@ export default function SocieteManagement() {
     }),
 
     apiGet<SocieteShort[]>("/societe", filters as unknown as Record<string, string>)
-      .then((data) => setSocietes(data))
+      .then((data) => {setSocietes(data), console.log(data)})
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
@@ -134,10 +134,6 @@ export default function SocieteManagement() {
           icon:<FileText className="h-8 w-8 text-green-600"/>,
           value:filteredSocietes.filter(s=>s.document).length,
           label:"Docs OK"
-        },{
-          icon:<Calendar className="h-8 w-8 text-orange-600"/>,
-          value:filteredSocietes.filter(s=>new Date(s.dateCloture1)<new Date(Date.now()+30*24*60*60*1000)).length,
-          label:"Clôtures proches"
         }].map((stat,i)=>(
           <Card key={i}><CardContent className="p-4 flex items-center gap-2">{stat.icon}<div><p className="text-2xl font-bold">{stat.value}</p><p className="text-sm text-gray-600">{stat.label}</p></div></CardContent></Card>
         ))}
@@ -156,7 +152,13 @@ export default function SocieteManagement() {
                         Mission en cours
                       </Badge>
                     )}
+                    {s.missionsNonAttribuees && (
+                      <Badge className="bg-yellow-100 text-yellow-800">
+                        Missions non attribuées
+                      </Badge>
+                    )}
                 </div>
+                
               </div>
               <Button
                 variant="ghost"
@@ -169,10 +171,14 @@ export default function SocieteManagement() {
             <CardContent className="space-y-3 text-sm">
               <div>SIRET: <span className="text-gray-600">{s.siret}</span></div>
               <div className="flex items-center gap-1"><MapPin className="h-4 w-4 text-gray-400"/>{s.siegeSocial}</div>
-              <div className="flex items-center gap-1"><Calendar className="h-4 w-4 text-gray-400"/>Clôture: {new Date(s.dateCloture1).toLocaleDateString()}</div>
+              { s.dateCloturePlusAncienExercice && (
+                <div className="flex items-center gap-1"><Calendar className="h-4 w-4 text-gray-400"/>Clôture: {new Date(s.dateCloturePlusAncienExercice).toLocaleDateString()}</div>
+              )}
               <div>Dirigeant: <span className="text-gray-600">{s.dirigeantPrenom} {s.dirigeantNom}</span></div>
-              <div>Activité: <span className="texay-600">{s.activite?.name}</span></div>
-              <div className="flex gap--3 border-t">
+              <div>Activité: <span className="text-gray-600">{s.activite?.name}</span></div>
+              <div>Exercices: <span className="text-gray-600">{ s.exercicesNonTerminees} / {s.exercicesTotal} {s.exercicesNonAttribues} </span></div>
+              <div>Missions: <span className="text-gray-600">{s.missionsNonTerminees} / {s.missionsTotal} {s.missionsNonAttribuees} </span></div>
+              <div className="flex gap-3 border-t">
                 <Link href={`/societe/${s.id}`}>
                   <Button variant="outline" size="sm" className="flex-1">
                     <Eye className="h-4 w-4 mr-1" />
