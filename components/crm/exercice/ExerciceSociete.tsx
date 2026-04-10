@@ -99,7 +99,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
   // Form state pour Exercice
   const [exerciceForm, setExerciceForm] = useState({
     dateDeCloture: "",
-    dateMiseEnCloture: "",
+    dateOuverture: "",
     statut: StatutExercice.EN_COURS,
   });
   
@@ -172,7 +172,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
     const endOfYear = new Date(today.getFullYear(), 11, 31);
     setExerciceForm({
       dateDeCloture: endOfYear.toISOString().slice(0, 10),
-      dateMiseEnCloture: "",
+      dateOuverture: "",
       statut: StatutExercice.EN_COURS,
     });
   };
@@ -199,7 +199,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
     setSelectedExercice(exercice);
     setExerciceForm({
       dateDeCloture: exercice.dateDeCloture.slice(0, 10),
-      dateMiseEnCloture: exercice.dateMiseEnCloture ? exercice.dateMiseEnCloture.slice(0, 10) : "",
+      dateOuverture: exercice.dateOuverture ? exercice.dateOuverture.slice(0, 10) : "",
       statut: exercice.statut,
     });
     setIsEditExerciceOpen(true);
@@ -220,7 +220,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
       const dto: CreateExerciceDto = {
         societeId,
         dateDeCloture: exerciceForm.dateDeCloture,
-        dateMiseEnCloture: exerciceForm.dateMiseEnCloture || undefined,
+        dateOuverture: exerciceForm.dateOuverture || undefined,
         statut: exerciceForm.statut,
       };
 
@@ -251,13 +251,15 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
     try {
       const dto: UpdateExerciceDto = {
         dateDeCloture: exerciceForm.dateDeCloture || undefined,
-        dateMiseEnCloture: exerciceForm.dateMiseEnCloture || undefined,
+        dateOuverture: exerciceForm.dateOuverture || undefined,
         statut: exerciceForm.statut,
       };
 
       const updated = await updateExercice(selectedExercice.id, dto);
       setExercices((prev) =>
-        prev.map((ex) => (ex.id === updated.id ? updated : ex))
+        prev.map((ex) =>
+          ex.id === updated.id ? { ...updated, missions: ex.missions } : ex
+        )
       );
       setIsEditExerciceOpen(false);
       setSelectedExercice(null);
@@ -540,7 +542,7 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
                         <div className="flex items-center gap-3">
                           <FolderOpen className="h-5 w-5 text-blue-600" />
                           <span className="font-semibold">
-                            Clôture: {formatDate(exercice.dateDeCloture)}
+                            Date Cloture: {formatDate(exercice.dateDeCloture)}
                           </span>
                           <Badge
                             variant={exercice.statut === StatutExercice.TERMINE ? "default" : "outline"}
@@ -571,14 +573,21 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
                         {/* Exercice details */}
                         <div className="px-4 py-3 bg-blue-50 flex items-center justify-between">
                           <div className="flex items-center gap-4 text-sm">
-                            {exercice.dateMiseEnCloture && (
+                            {exercice.dateDeCloture && (
                               <div>
-                                <span className="text-gray-500">Fini le:</span>{" "}
+                                <span className="text-gray-500">Date Ouverture de l&apos;exercice:</span>{" "}
                                 <span className="font-medium">
-                                  {formatDate(exercice.dateMiseEnCloture)}
+                                  {formatDate(exercice.dateOuverture)}
                                 </span>
                               </div>
                             )}
+                              <div>
+                                <span className="text-gray-500">Terminé le:</span>{" "}
+                                <span className="font-medium">
+                                  {formatDate(exercice.dateTerminer)}
+                                </span>
+                              </div>
+                          
                           </div>
                           {isAdmin && (
                             <div className="flex items-center gap-2">
@@ -670,7 +679,13 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
                                       </Badge>
                                     </div>
                                     
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm ml-8">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm ml-8">
+                                      <div>
+                                        <span className="text-gray-500">Validé le</span>{" "}
+                                        <span className="font-medium">
+                                          {formatDate(mission.dateTerminer)}
+                                        </span>
+                                      </div>
                                       <div>
                                         <span className="text-gray-500">Date d&apos;échéance:</span>{" "}
                                         <span className="font-medium">
@@ -761,14 +776,14 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
             </div>
             
             <div>
-              <label className="text-sm font-medium">Fini le :</label>
+              <label className="text-sm font-medium">Date ouverture :</label>
               <Input
                 type="date"
-                value={exerciceForm.dateMiseEnCloture}
+                value={exerciceForm.dateOuverture}
                 onChange={(e) =>
                   setExerciceForm((prev) => ({
                     ...prev,
-                    dateMiseEnCloture: e.target.value,
+                    dateOuverture: e.target.value,
                   }))
                 }
               />
@@ -835,19 +850,19 @@ export default function ExerciceSociete({ societeId }: ExerciceSocieteProps) {
             </div>
             
             <div>
-              <label className="text-sm font-medium">Fini le :</label>
+              <label className="text-sm font-medium">Date d&apos;ouverture :</label>
               <Input
                 type="date"
-                value={exerciceForm.dateMiseEnCloture}
+                value={exerciceForm.dateOuverture}
                 onChange={(e) =>
                   setExerciceForm((prev) => ({
                     ...prev,
-                    dateMiseEnCloture: e.target.value,
+                    dateOuverture: e.target.value,
                   }))
                 }
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Statut</label>
               <Select

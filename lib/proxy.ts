@@ -64,6 +64,14 @@ export async function proxyRequest(
       redirect: "manual",
     });
 
+    // Log de la réponse backend
+    const logMsg = `[PROXY] ${method} ${url} → ${response.status}`;
+    if (response.status >= 400) {
+      console.error(logMsg);
+    } else {
+      console.log(logMsg);
+    }
+
     // Créer la réponse avec les headers du backend
     const responseHeaders = new Headers();
 
@@ -89,7 +97,9 @@ export async function proxyRequest(
     // Gérer les différents types de réponse
     if (respContentType?.includes("application/json")) {
       const data = await response.json();
-      
+      if (response.status >= 400) {
+        console.error(`[PROXY] Error body:`, data);
+      }
       return NextResponse.json(data, {
         status: response.status,
         headers: responseHeaders,
@@ -116,6 +126,7 @@ export async function proxyRequest(
       });
     }
   } catch (error) {
+    console.error(`[PROXY] Network error on ${method} ${url}:`, error);
     return NextResponse.json(
       { error: "Erreur de connexion au serveur", details: String(error) },
       { status: 502 }

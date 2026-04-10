@@ -1,7 +1,4 @@
 // types/societe.ts
-
-import { fi } from "date-fns/locale"
-
 export enum FormeJuridique {
     SARL = "SARL",
     SAS = "SAS",
@@ -58,11 +55,6 @@ export interface Societe {
   dateCreation: string
   dateCloture1: string
   
-  tarifCompta?: number
-  tarifSocial?: number
-  tarifRattrapage?: number
-  tarifAutres?: number
-  
   regimeTva: RegimeTva
   regimeImposition: RegimeImposition
   
@@ -76,17 +68,15 @@ export interface Societe {
   impotgouv: boolean
   
   documents?: SocieteDocuments
-  cannaux?: Canal[];
 
   dateDebutFacturation?: string;
 
-  responsable? : string;
-  collaborateurCompta? : string;
-  collaborateurSocial? : string;
-  intervenant? : string;
   frontOffice? : string;
 
   ancienEC?: string;
+
+  iban?: string;
+  bic?: string;
 }
 
 export interface SocieteShort {
@@ -101,14 +91,32 @@ export interface SocieteShort {
     document: boolean
     dateCreation: string
     updatedAt: string
-    siegeSocial : string
+    siegeSocial: string
     hasOngoingTask: boolean
-    exercicesTotal: number;
-    exercicesNonTerminees: number;
-    exercicesNonAttribues: boolean;
-    missionsTotal: number;
-    missionsNonTerminees: number;
-    missionsNonAttribuees: number;
+    regimeImposition: RegimeImposition | null
+    // Exercices
+    exercicesTotal: number
+    exercicesNonTerminees: number
+    exercicesNonAttribues: boolean
+    // Missions
+    missionsTotal: number
+    missionsTerminees: number
+    missionsNonTerminees: number
+    missionsNonAttribuees: number
+    missionsEnRetard: number
+    tauxCompletionMissions: number
+    prochaineMissionEcheance: string | null
+    // Missions TVA
+    missionsTvaAttendu: number
+    missionsTvaCount: number
+    // Documents
+    documentsCount: number
+    // Alertes
+    alerteClotureProchaineEcheance: boolean
+    alerteClotureDepassee: boolean
+    alerteTvaMensuelleManquante: boolean
+    alerteTvaMensuelleHistoriqueManquante: boolean
+    alertePasExerciceEnCours: boolean
 }
   
 

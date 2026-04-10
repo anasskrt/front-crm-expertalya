@@ -10,19 +10,37 @@ import { Users, Building, Heart, UserCog, LogOut, Plus } from "lucide-react";
 import Navigation from "@/components/crm/Navigation";
 import { apiGet, apiPost } from "@/lib/api";
 
+interface DashboardStats {
+  missionsAffectees: number;
+  missionsEnRetard: number;
+  notificationsNonLues: number;
+  societesActives: number;
+}
+
 export default function Page() {
   const [pending, setPending] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        // 1. Vérifier le profil en premier
         const user = await apiGet<any>("/user/profil");
-        if (!cancelled) setCurrentUser(user);
+        if (cancelled) return;
+        setCurrentUser(user);
+
+        // 2. Si le profil est valide, charger le dashboard
+        try {
+          const dashboardStats = await apiGet<DashboardStats>("/user/dashboard");
+          if (!cancelled) setStats(dashboardStats);
+        } catch {
+          // Le dashboard peut échouer sans bloquer la page
+        }
       } catch {
         // Pas de JWT ou expiré → redirection vers /login
-        if (typeof window !== "undefined") {
+        if (!cancelled && typeof window !== "undefined") {
           window.location.href = "/login?reason=expired";
         }
       } finally {
@@ -76,45 +94,42 @@ export default function Page() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Sociétés</CardTitle>
+              <CardTitle className="text-sm font-medium">Missions Affectées</CardTitle>
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">100</div>
-              <p className="text-xs text-muted-foreground">+2 ce mois</p>
+              <div className="text-2xl font-bold">{stats?.missionsAffectees ?? "—"}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Utilisateurs</CardTitle>
+              <CardTitle className="text-sm font-medium">Mission en retard</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">100</div>
-              <p className="text-xs text-muted-foreground">Actifs</p>
+              <div className="text-2xl font-bold">{stats?.missionsEnRetard ?? "—"}</div>
+              {/* <p className="text-xs text-muted-foreground">Actifs</p> */}
             </CardContent>
           </Card>
 
           <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Documents manquants</CardTitle>
+              <CardTitle className="text-sm font-medium">Notifications non lues</CardTitle>
               <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">100</div>
-              <p className="text-xs text-muted-foreground">À traiter</p>
+              <div className="text-2xl font-bold">{stats?.notificationsNonLues ?? "—"}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Clôtures proches</CardTitle>
+              <CardTitle className="text-sm font-medium">Societe Actives</CardTitle>
               <UserCog className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">100</div>
-              <p className="text-xs text-muted-foreground">Ce mois</p>
+              <div className="text-2xl font-bold">{stats?.societesActives ?? "—"}</div>
             </CardContent>
           </Card>
         </div>

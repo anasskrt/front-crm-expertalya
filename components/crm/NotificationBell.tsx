@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Bell, CheckCheck, Loader2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,25 +12,34 @@ import Link from "next/link";
 import {
   Notification,
   getNotifications,
-  getNotificationsNonLues,
   marquerCommeLue,
   marquerToutCommeLu,
 } from "@/lib/api/notification";
 
+// Intervalle de polling (60s). Le panel s'ouvre sans requête supplémentaire
+// car la liste complète est déjà mise en cache à chaque poll.
 const POLL_INTERVAL = 60_000;
 
 export default function NotificationBell() {
-  const [count, setCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // true uniquement au tout premier chargement (avant le 1er poll)
+  const [initialLoading, setInitialLoading] = useState(true);
+  const lastFetchRef = useRef<number>(0);
 
-  const fetchCount = useCallback(async () => {
+  const unreadNotifications = notifications.filter((n) => !n.lu);
+  const count = unreadNotifications.length;
+
+  // Fetche la liste complète et met à jour le cache local
+  const fetchAll = useCallback(async () => {
     try {
-      const n = await getNotificationsNonLues();
-      setCount(n);
+      const data = await getNotifications();
+      setNotifications(data);
+      lastFetchRef.current = Date.now();
     } catch {
       // silencieux — l'utilisateur peut ne pas être connecté
+    } finally {
+      setInitialLoading(false);
     }
   }, []);
 
@@ -39,8 +48,8 @@ export default function NotificationBell() {
     let interval: ReturnType<typeof setInterval> | null = null;
 
     const start = () => {
-      fetchCount();
-      interval = setInterval(fetchCount, POLL_INTERVAL);
+      fetchAll();
+      interval = setInterval(fetchAll, POLL_INTERVAL);
     };
 
     const stop = () => {
@@ -52,13 +61,15 @@ export default function NotificationBell() {
 
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        start();
+        // Si l'onglet revient visible et que les données ont plus de 60s, on rafraîchit
+        const stale = Date.now() - lastFetchRef.current > POLL_INTERVAL;
+        if (stale) fetchAll();
+        interval = setInterval(fetchAll, POLL_INTERVAL);
       } else {
         stop();
       }
     };
 
-    // Démarrage initial si l'onglet est déjà visible
     if (document.visibilityState === "visible") {
       start();
     }
@@ -68,29 +79,23 @@ export default function NotificationBell() {
       stop();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [fetchCount]);
+  }, [fetchAll]);
 
-  // Chargement des non lues à l'ouverture du panneau
-  const handleOpen = async (isOpen: boolean) => {
+  // À l'ouverture du panel : on utilise le cache, pas de requête supplémentaire.
+  // Si les données ont plus de 30s, on rafraîchit discrètement en arrière-plan.
+  const handleOpen = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) return;
-
-    setLoading(true);
-    try {
-      const data = await getNotifications();
-      setNotifications(data.filter((n) => !n.lu));
-    } catch {
-      // silencieux
-    } finally {
-      setLoading(false);
-    }
+    const stale = Date.now() - lastFetchRef.current > 30_000;
+    if (stale) fetchAll();
   };
 
   const handleMarquerLue = async (notif: Notification) => {
     try {
       await marquerCommeLue(notif.id);
-      setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
-      setCount((prev) => Math.max(0, prev - 1));
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notif.id ? { ...n, lu: true } : n))
+      );
     } catch {
       // silencieux
     }
@@ -99,8 +104,7 @@ export default function NotificationBell() {
   const handleMarquerTout = async () => {
     try {
       await marquerToutCommeLu();
-      setNotifications([]);
-      setCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, lu: true })));
     } catch {
       // silencieux
     }
@@ -122,7 +126,7 @@ export default function NotificationBell() {
         <button className="relative p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
           <Bell className="h-5 w-5 text-gray-700" />
           {count > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold px-1">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
               {count > 99 ? "99+" : count}
             </span>
           )}
@@ -132,7 +136,9 @@ export default function NotificationBell() {
       <PopoverContent align="end" className="w-80 p-0">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <span className="font-semibold text-sm">Notifications</span>
+          <span className="font-semibold text-sm">
+            Notifications {count > 0 && <span className="text-red-500">({count})</span>}
+          </span>
           {count > 0 && (
             <Button
               variant="ghost"
@@ -148,16 +154,16 @@ export default function NotificationBell() {
 
         {/* Liste */}
         <div className="max-h-80 overflow-y-auto">
-          {loading ? (
+          {initialLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
             </div>
-          ) : notifications.length === 0 ? (
+          ) : unreadNotifications.length === 0 ? (
             <p className="text-center text-sm text-gray-500 py-10">
               Aucune nouvelle notification
             </p>
           ) : (
-            notifications.map((notif) => (
+            unreadNotifications.map((notif) => (
               <button
                 key={notif.id}
                 onClick={() => handleMarquerLue(notif)}

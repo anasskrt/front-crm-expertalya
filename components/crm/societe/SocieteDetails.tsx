@@ -28,6 +28,7 @@ import { formatsJuridiques } from "@/data/mockData";
 import { getAllActivites, Activite } from "@/lib/api/activite";
 import SocieteDocuments from "../Document/Document";
 import ExerciceSociete from "../exercice/ExerciceSociete";
+import { Label } from "@/components/ui/label";
 
 
 interface SocieteDetailsProps {
@@ -49,14 +50,14 @@ const SocieteDetails = ({
   const isAdmin = currentUserRole === 1;
 
   const renderOrNull = (value: any) =>
-    value === null || value === undefined || value === "" ? "null" : value;
+    value === null || value === undefined || value === "" ? "Non renseigné" : value;
 
   const renderDate = (date: any) => {
-    if (!date) return "null";
+    if (!date) return "Non renseignée";
     try {
       return new Date(date).toLocaleDateString();
     } catch {
-      return "null";
+      return "Non renseignée";
     }
   };
 
@@ -64,6 +65,9 @@ const SocieteDetails = ({
 
   // --- Édition des infos ---
   const [societeState, setSocieteState] = useState<Societe>(societe);
+  useEffect(() => {
+    console.log("[SocieteDetails] societe chargée :", societe);
+  }, [societe]);
 
 
   const [isEditingInfos, setIsEditingInfos] = useState(false);
@@ -79,7 +83,6 @@ const SocieteDetails = ({
     dirigeantNom: societe.dirigeantNom ?? "",
     email: societe.email ?? "",
     telephone: societe.telephone ?? "",
-    dateCloture1: societe.dateCloture1 ? new Date(societe.dateCloture1).toISOString().slice(0, 10) : "",
     dateSignatureMission: societe.dateSignatureMission ? new Date(societe.dateSignatureMission).toISOString().slice(0, 10) : "",
     dateRepriseMission: societe.dateRepriseMission ? new Date(societe.dateRepriseMission).toISOString().slice(0, 10) : "",
     regimeTva: (societe.regimeTva as string) ?? "",
@@ -87,16 +90,36 @@ const SocieteDetails = ({
     activite: String(societe.activiteId),
     dateDebutFacturation: societe.dateDebutFacturation ? new Date(societe.dateDebutFacturation).toISOString().slice(0, 10) : "",
 
-    responsable: societe.responsable ?? "",
-    collaborateurCompta: societe.collaborateurCompta ?? "",
-    collaborateurSocial: societe.collaborateurSocial ?? "",
-    intervenant: societe.intervenant ?? "",
     frontOffice: societe.frontOffice ?? "",
     ancienEC: societe.ancienEC ?? "",
+    iban: societe.iban ?? "",
+    bic: societe.bic ?? "",
   }));
 
   const setDraft = <K extends keyof typeof infosDraft>(key: K, value: (typeof infosDraft)[K]) =>
     setInfosDraft(prev => ({ ...prev, [key]: value }));
+
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+
+  const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  const isSiret = (v: string) => /^\d{14}$/.test(v.replace(/\s/g, ""));
+  const isNotEmpty = (v?: string | number) =>
+    v !== undefined && v !== null && String(v).trim().length > 0;
+
+  const validateEdit = () => {
+    const e: Record<string, string> = {};
+    if (!isNotEmpty(infosDraft.name)) e.name = "Obligatoire";
+    if (!isSiret(infosDraft.siret)) e.siret = "SIRET : 14 chiffres";
+    if (!isNotEmpty(infosDraft.dirigeantPrenom)) e.dirigeantPrenom = "Obligatoire";
+    if (!isNotEmpty(infosDraft.dirigeantNom)) e.dirigeantNom = "Obligatoire";
+    if (!isNotEmpty(infosDraft.telephone)) e.telephone = "Obligatoire";
+    if (!isEmail(infosDraft.email)) e.email = "Email invalide";
+    if (!isNotEmpty(infosDraft.siegeSocial)) e.siegeSocial = "Obligatoire";
+    if (!isNotEmpty(infosDraft.rcs)) e.rcs = "Obligatoire";
+    if (!isNotEmpty(infosDraft.codeNaf)) e.codeNaf = "Obligatoire";
+    if (!isNotEmpty(infosDraft.activite)) e.activite = "Obligatoire";
+    return e;
+  };
 
   // États pour les activités
   const [activites, setActivites] = useState<Activite[]>([]);
@@ -145,9 +168,20 @@ const SocieteDetails = ({
           description: "Vous n'avez pas les droits pour modifier cette société.",
           variant: "destructive",
         });
-
         return;
       }
+
+      const v = validateEdit();
+      if (Object.keys(v).length > 0) {
+        setEditErrors(v);
+        toast({
+          title: "Formulaire incomplet",
+          description: "Merci de corriger les champs en rouge.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setEditErrors({});
 
       setSavingInfos(true);
 
@@ -162,7 +196,6 @@ const SocieteDetails = ({
         dirigeantNom: infosDraft.dirigeantNom.trim(),
         email: infosDraft.email.trim(),
         telephone: infosDraft.telephone.trim(),
-        dateCloture1: infosDraft.dateCloture1 ? new Date(infosDraft.dateCloture1).toISOString() : null,
         dateSignatureMission: infosDraft.dateSignatureMission ? new Date(infosDraft.dateSignatureMission).toISOString() : null,
         dateRepriseMission: infosDraft.dateRepriseMission ? new Date(infosDraft.dateRepriseMission).toISOString() : null,
         regimeTva: infosDraft.regimeTva || null,
@@ -170,13 +203,12 @@ const SocieteDetails = ({
         activiteId: infosDraft.activite ? Number(infosDraft.activite) : null,
         dateDebutFacturation: infosDraft.dateDebutFacturation ? new Date(infosDraft.dateDebutFacturation).toISOString() : null,
 
-        responsable: infosDraft.responsable.trim() || null,
-        collaborateurCompta: infosDraft.collaborateurCompta.trim() || null,
-        collaborateurSocial: infosDraft.collaborateurSocial.trim() || null,
-        intervenant: infosDraft.intervenant.trim() || null,
         frontOffice: infosDraft.frontOffice.trim() || null,
         ancienEC: infosDraft.ancienEC.trim() || null,
+        iban: infosDraft.iban.trim() || null,
+        bic: infosDraft.bic.trim() || null,
       };
+      console.log("Payload envoyé à l'API :", payload);
 
       const updatedFromApi = await apiPatch<Societe>(`/societe/${societeState.id}`, payload);
 
@@ -186,11 +218,12 @@ const SocieteDetails = ({
           ...societeState,
           ...payload,
           // Harmonise les undefined attendu par ton front
-          dateCloture1: payload.dateCloture1 ?? undefined,
           dateSignatureMission: payload.dateSignatureMission ?? undefined,
           dateRepriseMission: payload.dateRepriseMission ?? undefined,
           dateDebutFacturation: payload.dateDebutFacturation ?? undefined,
           activiteId: payload.activiteId ?? societeState.activiteId,
+          iban: payload.iban ?? societeState.iban,
+          bic: payload.bic ?? societeState.bic,
         } as Societe;
 
       // 🔁 Met à jour l’état affiché
@@ -207,19 +240,16 @@ const SocieteDetails = ({
         dirigeantNom: next.dirigeantNom ?? "",
         email: next.email ?? "",
         telephone: next.telephone ?? "",
-        dateCloture1: next.dateCloture1 ? new Date(next.dateCloture1).toISOString().slice(0, 10) : "",
         dateSignatureMission: next.dateSignatureMission ? new Date(next.dateSignatureMission).toISOString().slice(0, 10) : "",
         dateRepriseMission: next.dateRepriseMission ? new Date(next.dateRepriseMission).toISOString().slice(0, 10) : "",
         regimeTva: (next.regimeTva as string) ?? "",
         regimeImposition: (next.regimeImposition as string) ?? "",
         activite: String(next.activiteId ?? ""),
         dateDebutFacturation: next.dateDebutFacturation ? new Date(next.dateDebutFacturation).toISOString().slice(0, 10) : "",
-        responsable: next.responsable ?? "",
-        collaborateurCompta: next.collaborateurCompta ?? "",
-        collaborateurSocial: next.collaborateurSocial ?? "",
-        intervenant: next.intervenant ?? "",
         frontOffice: next.frontOffice ?? "",
         ancienEC: next.ancienEC ?? "",
+        iban: next.iban ?? "",
+        bic: next.bic ?? "",
       });
 
       toast({ title: "Modifications enregistrées", description: "Les informations de la société ont été mises à jour." });
@@ -282,7 +312,6 @@ const SocieteDetails = ({
                               dirigeantNom: societe.dirigeantNom ?? "",
                               email: societe.email ?? "",
                               telephone: societe.telephone ?? "",
-                              dateCloture1: societe.dateCloture1 ? new Date(societe.dateCloture1).toISOString().slice(0, 10) : "",
                               dateSignatureMission: societe.dateSignatureMission ? new Date(societe.dateSignatureMission).toISOString().slice(0, 10) : "",
                               dateRepriseMission: societe.dateRepriseMission ? new Date(societe.dateRepriseMission).toISOString().slice(0, 10) : "",
                               regimeTva: (societe.regimeTva as string) ?? "",
@@ -290,13 +319,12 @@ const SocieteDetails = ({
                               activite: (societe.activite?.id ?? 0).toString(),
                               dateDebutFacturation: societe.dateDebutFacturation ? new Date(societe.dateDebutFacturation).toISOString().slice(0, 10) : "",
 
-                              responsable: societe.responsable ?? "",
-                              collaborateurCompta: societe.collaborateurCompta ?? "",
-                              collaborateurSocial: societe.collaborateurSocial ?? "",
-                              intervenant: societe.intervenant ?? "",
                               frontOffice: societe.frontOffice ?? "",
                               ancienEC: societe.ancienEC ?? "",
+                              iban: societe.iban ?? "",
+                              bic: societe.bic ?? "",
                             });
+                            setEditErrors({});
                             setIsEditingInfos(false);
                           }}
                         >
@@ -322,7 +350,10 @@ const SocieteDetails = ({
                 <div>
                   <label className="font-medium text-gray-700">Dénomination sociale</label>
                   {isEditingInfos ? (
-                    <Input value={infosDraft.name} onChange={e => setDraft("name", e.target.value)} />
+                    <>
+                      <Input value={infosDraft.name} onChange={e => setDraft("name", e.target.value)} className={editErrors.name ? "border-destructive" : ""} />
+                      {editErrors.name && <p className="text-sm text-destructive">{editErrors.name}</p>}
+                    </>
                   ) : (
                     <p className="text-gray-900">{renderOrNull(societeState.name)}</p>
                   )}
@@ -348,7 +379,10 @@ const SocieteDetails = ({
                 <div>
                   <label className="font-medium text-gray-700">SIRET</label>
                   {isEditingInfos ? (
-                    <Input value={infosDraft.siret} onChange={e => setDraft("siret", e.target.value)} />
+                    <>
+                      <Input value={infosDraft.siret} onChange={e => setDraft("siret", e.target.value)} className={editErrors.siret ? "border-destructive" : ""} inputMode="numeric" />
+                      {editErrors.siret && <p className="text-sm text-destructive">{editErrors.siret}</p>}
+                    </>
                   ) : (
                     <p className="text-gray-900">{renderOrNull(societeState.siret)}</p>
                   )}
@@ -356,7 +390,10 @@ const SocieteDetails = ({
                 <div>
                   <label className="font-medium text-gray-700">RCS</label>
                   {isEditingInfos ? (
-                    <Input value={infosDraft.rcs} onChange={e => setDraft("rcs", e.target.value)} />
+                    <>
+                      <Input value={infosDraft.rcs} onChange={e => setDraft("rcs", e.target.value)} className={editErrors.rcs ? "border-destructive" : ""} />
+                      {editErrors.rcs && <p className="text-sm text-destructive">{editErrors.rcs}</p>}
+                    </>
                   ) : (
                     <p className="text-gray-900">{renderOrNull(societeState.rcs)}</p>
                   )}
@@ -364,7 +401,10 @@ const SocieteDetails = ({
                 <div>
                   <label className="font-medium text-gray-700">Code NAF</label>
                   {isEditingInfos ? (
-                    <Input value={infosDraft.codeNaf} onChange={e => setDraft("codeNaf", e.target.value)} />
+                    <>
+                      <Input value={infosDraft.codeNaf} onChange={e => setDraft("codeNaf", e.target.value)} className={editErrors.codeNaf ? "border-destructive" : ""} />
+                      {editErrors.codeNaf && <p className="text-sm text-destructive">{editErrors.codeNaf}</p>}
+                    </>
                   ) : (
                     <p className="text-gray-900">{renderOrNull(societeState.codeNaf)}</p>
                   )}
@@ -372,6 +412,7 @@ const SocieteDetails = ({
                 <div ref={activiteRef}>
                   <label className="font-medium text-gray-700">Activité</label>
                   {isEditingInfos ? (
+                    <>
                     <div className="relative">
                       <Input
                         placeholder="Rechercher une activité..."
@@ -423,6 +464,8 @@ const SocieteDetails = ({
                         </div>
                       )}
                     </div>
+                    {editErrors.activite && <p className="text-sm text-destructive">{editErrors.activite}</p>}
+                    </>
                   ) : (
                     <p className="text-gray-900">
                       {displayActiviteName}
@@ -436,7 +479,7 @@ const SocieteDetails = ({
                     <p className="text-gray-900">{renderDate(societeState.dateCreation)}</p>
                   </div>
                 </div>
-                <div>
+                {/* <div>
                   <label className="font-medium text-gray-700">Date de clôture</label>
                   <div className="flex items-center gap-1">
                     {isEditingInfos ? (
@@ -448,7 +491,7 @@ const SocieteDetails = ({
                       </div>
                     )}
                   </div>
-                </div>
+                </div> */}
                 <div>
                   <label className="font-medium text-gray-700">Date signature mission</label>
 
@@ -473,23 +516,40 @@ const SocieteDetails = ({
                     </div>
                   )}
                 </div>
-                <div>
-                  <label className="font-medium text-gray-700">Régime TVA</label>
-                  {isEditingInfos ? (
-                    <Input value={infosDraft.regimeTva} onChange={e => setDraft("regimeTva", e.target.value)} />
-                  ) : (
-                    <p className="text-gray-900">{renderOrNull(societeState.regimeTva)}</p>
-                  )}
-                </div>
+                  <div className="flex flex-col gap-2">
+                    <Label>Régime TVA</Label>
+                    {isEditingInfos ? (
+                    <select
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={infosDraft.regimeTva}
+                      onChange={(e) => setDraft("regimeTva", e.target.value)}
+                    >
+                      <option value="">--</option>
+                      <option value="MENSUEL">Mensuel</option>
+                      <option value="TRIMESTRIEL">Trimestriel</option>
+                      <option value="ANNUEL">Annuel</option>
+                    </select>
+                    ) : (
+                      <p className="text-gray-900">{renderOrNull(societeState.regimeTva)}</p>
+                    )}
+                    
+                  </div>
                 <div>
                   <label className="font-medium text-gray-700">Régime imposition</label>
                   {isEditingInfos ? (
-                    <Input value={infosDraft.regimeImposition} onChange={e => setDraft("regimeImposition", e.target.value)} />
+                     <select
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={infosDraft.regimeImposition}
+                      onChange={(e) => setDraft("regimeImposition", e.target.value)}
+                      >
+                        <option value="">--</option>
+                        <option value="IS">IS</option>
+                        <option value="IR">IR</option>
+                      </select>
                   ) : (
                     <p className="text-gray-900">{renderOrNull(societeState.regimeImposition)}</p>
                   )}
                 </div>
-
                 <div>
                   <label className="font-medium text-gray-700">Date début de la facturation</label>
 
@@ -500,6 +560,24 @@ const SocieteDetails = ({
                       <Calendar className="h-4 w-4 text-gray-400" />
                       <p className="text-gray-900">{renderDate(societeState.dateDebutFacturation)}</p>
                     </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="font-medium text-gray-700">IBAN</label>
+                  {isEditingInfos ? (
+                    <Input value={infosDraft.iban} onChange={e => setDraft("iban", e.target.value)} />
+                  ) : (
+                    <p className="text-gray-900">{renderOrNull(societeState.iban)}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="font-medium text-gray-700">BIC</label>
+                  {isEditingInfos ? (
+                    <Input value={infosDraft.bic} onChange={e => setDraft("bic", e.target.value)} />
+                  ) : (
+                    <p className="text-gray-900">{renderOrNull(societeState.bic)}</p>
                   )}
                 </div>
               </div>
@@ -515,7 +593,10 @@ const SocieteDetails = ({
             </CardHeader>
             <CardContent>
               {isEditingInfos ? (
-                <Input value={infosDraft.siegeSocial} onChange={e => setDraft("siegeSocial", e.target.value)} />
+                <>
+                  <Input value={infosDraft.siegeSocial} onChange={e => setDraft("siegeSocial", e.target.value)} className={editErrors.siegeSocial ? "border-destructive" : ""} />
+                  {editErrors.siegeSocial && <p className="text-sm text-destructive">{editErrors.siegeSocial}</p>}
+                </>
               ) : (
                 <p className="text-gray-900">{renderOrNull(societeState.siegeSocial)}</p>
               )}
@@ -533,10 +614,18 @@ const SocieteDetails = ({
               <div>
                 <label className="font-medium text-gray-700">Nom complet</label>
                 {isEditingInfos ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <Input placeholder="Prénom" value={infosDraft.dirigeantPrenom} onChange={e => setDraft("dirigeantPrenom", e.target.value)} />
-                    <Input placeholder="Nom" value={infosDraft.dirigeantNom} onChange={e => setDraft("dirigeantNom", e.target.value)} />
-                  </div>
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <Input placeholder="Prénom" value={infosDraft.dirigeantPrenom} onChange={e => setDraft("dirigeantPrenom", e.target.value)} className={editErrors.dirigeantPrenom ? "border-destructive" : ""} />
+                        {editErrors.dirigeantPrenom && <p className="text-sm text-destructive">{editErrors.dirigeantPrenom}</p>}
+                      </div>
+                      <div>
+                        <Input placeholder="Nom" value={infosDraft.dirigeantNom} onChange={e => setDraft("dirigeantNom", e.target.value)} className={editErrors.dirigeantNom ? "border-destructive" : ""} />
+                        {editErrors.dirigeantNom && <p className="text-sm text-destructive">{editErrors.dirigeantNom}</p>}
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <p className="text-gray-900">
                     {renderOrNull(societeState.dirigeantPrenom)} {renderOrNull(societeState.dirigeantNom)}
@@ -546,7 +635,10 @@ const SocieteDetails = ({
               <div>
                 <label className="font-medium text-gray-700">Email</label>
                 {isEditingInfos ? (
-                  <Input type="email" value={infosDraft.email} onChange={e => setDraft("email", e.target.value)} />
+                  <>
+                    <Input type="email" value={infosDraft.email} onChange={e => setDraft("email", e.target.value)} className={editErrors.email ? "border-destructive" : ""} />
+                    {editErrors.email && <p className="text-sm text-destructive">{editErrors.email}</p>}
+                  </>
                 ) : (
                   <p className="text-gray-900">{renderOrNull(societeState.email)}</p>
                 )}
@@ -554,7 +646,10 @@ const SocieteDetails = ({
               <div>
                 <label className="font-medium text-gray-700">Téléphone</label>
                 {isEditingInfos ? (
-                  <Input value={infosDraft.telephone} onChange={e => setDraft("telephone", e.target.value)} />
+                  <>
+                    <Input value={infosDraft.telephone} onChange={e => setDraft("telephone", e.target.value)} className={editErrors.telephone ? "border-destructive" : ""} />
+                    {editErrors.telephone && <p className="text-sm text-destructive">{editErrors.telephone}</p>}
+                  </>
                 ) : (
                   <p className="text-gray-900">{renderOrNull(societeState.telephone)}</p>
                 )}
@@ -573,18 +668,6 @@ const SocieteDetails = ({
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="">
-                  <label className="font-medium text-gray-700">Responsable</label>
-                  {isEditingInfos ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <Input placeholder="Responsable" value={infosDraft.responsable} onChange={e => setDraft("responsable", e.target.value)} />
-                    </div>
-                  ) : (
-                    <p className="text-gray-900">
-                      {renderOrNull(societeState.responsable)}
-                    </p>
-                  )}
-                </div>
                 <div>
                   <label className="font-medium text-gray-700">Front Office</label>
                   {isEditingInfos ? (
@@ -595,30 +678,6 @@ const SocieteDetails = ({
                     <p className="text-gray-900">
                       {renderOrNull(societeState.frontOffice)}
                     </p>
-                  )}
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Collaborateur Comptable</label>
-                  {isEditingInfos ? (
-                    <Input value={infosDraft.collaborateurCompta} onChange={e => setDraft("collaborateurCompta", e.target.value)} />
-                  ) : (
-                    <p className="text-gray-900">{renderOrNull(societeState.collaborateurCompta)}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Collaborateur Social</label>
-                  {isEditingInfos ? (
-                    <Input value={infosDraft.collaborateurSocial} onChange={e => setDraft("collaborateurSocial", e.target.value)} />
-                  ) : (
-                    <p className="text-gray-900">{renderOrNull(societeState.collaborateurSocial)}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Intervenant</label>
-                  {isEditingInfos ? (
-                    <Input value={infosDraft.intervenant} onChange={e => setDraft("intervenant", e.target.value)} />
-                  ) : (
-                    <p className="text-gray-900">{renderOrNull(societeState.intervenant)}</p>
                   )}
                 </div>
                 <div>

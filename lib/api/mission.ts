@@ -11,6 +11,7 @@ export interface Mission {
   };
   dateEcheance: string | null;
   terminer: boolean;
+  dateTerminer: string | null;
   collaborateurId: number | null;
   managerId: number | null;
   collaborateur?: {

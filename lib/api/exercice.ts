@@ -18,6 +18,8 @@ export interface Exercice {
   societeId: number;
   dateDeCloture: string;
   dateMiseEnCloture: string | null;
+  dateOuverture: string | null;
+  dateTerminer: string | null;
   statut: StatutExercice;
   missions: Mission[];
   societe?: {
@@ -32,12 +34,14 @@ export interface CreateExerciceDto {
   societeId: number;
   dateDeCloture: string;
   dateMiseEnCloture?: string;
+  dateOuverture?: string;
   statut?: StatutExercice;
 }
 
 export interface UpdateExerciceDto {
   dateDeCloture?: string;
   dateMiseEnCloture?: string;
+  dateOuverture?: string;
   statut?: StatutExercice;
 }
 
