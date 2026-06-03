@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Building, UserCog, Plus, Home, Table2 } from "lucide-react";
+import { Users, Building, UserCog, Plus, Home, Table2, CreditCard, Mail } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import NotificationBell from "@/components/crm/NotificationBell";
 
@@ -26,6 +26,9 @@ const Navigation = () => {
     { path: "/activite", label: "Liste des activités", icon: Table2  },
     { path: "/exercice/collaborateur", label: "Liste des exercices collaborateurs", icon: Table2  },
     { path: "/typemission", label: "Types de mission", icon: Table2  },
+    { path: "/paiements", label: "Dashboard Paiements", icon: CreditCard },
+    { path: "/email/admin", label: "Templates Email", icon: Mail },
+    { path: "/email/listes", label: "Listes Email", icon: Mail },
 
 
 

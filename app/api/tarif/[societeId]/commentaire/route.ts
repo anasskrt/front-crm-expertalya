@@ -5,8 +5,8 @@ interface Params {
   params: Promise<{ societeId: string }>;
 }
 
-// DELETE /api/tarif/[id]
-export async function DELETE(request: NextRequest, { params }: Params) {
+// PATCH /api/tarif/[id]/commentaire
+export async function PATCH(request: NextRequest, { params }: Params) {
   const { societeId: id } = await params;
-  return proxyRequest(request, `/tarif/${id}`);
+  return proxyRequest(request, `/tarif/${id}/commentaire`);
 }

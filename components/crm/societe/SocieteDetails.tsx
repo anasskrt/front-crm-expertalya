@@ -28,6 +28,9 @@ import { formatsJuridiques } from "@/data/mockData";
 import { getAllActivites, Activite } from "@/lib/api/activite";
 import SocieteDocuments from "../Document/Document";
 import ExerciceSociete from "../exercice/ExerciceSociete";
+import TarifSociete from "../tarif/TarifSociete";
+import FactureSociete from "../facture/FactureSociete";
+import HistoriqueEmail from "../email/HistoriqueEmail";
 import { Label } from "@/components/ui/label";
 
 
@@ -277,10 +280,12 @@ const SocieteDetails = ({
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="infos">Informations</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="exercices">Exercices</TabsTrigger>
+          <TabsTrigger value="factures">Factures</TabsTrigger>
+          <TabsTrigger value="emails">Emails</TabsTrigger>
         </TabsList>
 
         {/* Onglet Informations */}
@@ -692,6 +697,7 @@ const SocieteDetails = ({
             </CardContent>
           </Card>
 
+          <TarifSociete societeId={societe.id} />
         </TabsContent>
 
         {/* Onglet Documents */}
@@ -702,6 +708,16 @@ const SocieteDetails = ({
         {/* Onglet Exercices */}
         <TabsContent value="exercices" className="space-y-4">
           <ExerciceSociete societeId={societe.id} />
+        </TabsContent>
+
+        {/* Onglet Factures */}
+        <TabsContent value="factures" className="space-y-4">
+          <FactureSociete societeId={societe.id} />
+        </TabsContent>
+
+        {/* Onglet Emails */}
+        <TabsContent value="emails" className="space-y-4">
+          <HistoriqueEmail societeId={societe.id} societeEmail={societeState.email ?? ""} societeName={societeState.name} />
         </TabsContent>
       </Tabs>
     </div>

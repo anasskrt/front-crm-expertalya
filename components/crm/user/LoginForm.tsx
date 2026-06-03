@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import { Building, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api";
@@ -94,6 +95,15 @@ export default function LoginPage({ onLoginSuccess }: LoginFormProps) {
               <LogIn className="h-4 w-4 mr-2" />
               {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
+
+            <div className="text-center">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

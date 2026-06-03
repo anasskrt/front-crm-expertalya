@@ -22,12 +22,32 @@ import {
   Clock,
   ExternalLink,
   ListTodo,
+  Plus,
 } from "lucide-react";
 import {
   Mission,
+  CreateMissionDto,
   getMyMissions,
   updateMission,
+  createMission,
 } from "@/lib/api/mission";
+import { Exercice, getAllExercices } from "@/lib/api/exercice";
+import { TypeMissionItem, getTypeMissions } from "@/lib/api/typemission";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
 
 export default function MesMissionsPage() {
@@ -38,6 +58,18 @@ export default function MesMissionsPage() {
   const [loading, setLoading] = useState(true);
   const [expandedSocietes, setExpandedSocietes] = useState<Set<number>>(new Set());
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "done">("all");
+
+  // Données pour la création de mission
+  const [allExercices, setAllExercices] = useState<Exercice[]>([]);
+  const [typeMissions, setTypeMissions] = useState<TypeMissionItem[]>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    societeId: "" as string,
+    exerciceId: "" as string,
+    typeMissionId: "" as string,
+    dateEcheance: "",
+  });
 
   useEffect(() => {
     if (!currentUser) {
@@ -57,8 +89,14 @@ export default function MesMissionsPage() {
     if (!currentUser) return;
     async function loadMissions() {
       try {
-        const data = await getMyMissions();
+        const [data, exercicesData, typeMissionsData] = await Promise.all([
+          getMyMissions(),
+          getAllExercices(),
+          getTypeMissions(),
+        ]);
         setMissions(data);
+        setAllExercices(exercicesData);
+        setTypeMissions(typeMissionsData);
         console.log("Missions chargées pour collaborateur", data);
         // Auto-expand all societes
         const societeIds = new Set<number>();
@@ -182,6 +220,52 @@ export default function MesMissionsPage() {
     return { total, done, pending, societes };
   }, [missions]);
 
+  // Sociétés uniques dérivées des exercices disponibles
+  const societesDisponibles = useMemo(() => {
+    const map = new Map<number, string>();
+    allExercices.forEach((ex) => {
+      if (ex.societe) map.set(ex.societe.id, ex.societe.name);
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allExercices]);
+
+  // Exercices de la société sélectionnée
+  const exercicesDeSociete = useMemo(() => {
+    if (!createForm.societeId) return [];
+    return allExercices.filter(
+      (ex) => ex.societeId === Number(createForm.societeId)
+    );
+  }, [allExercices, createForm.societeId]);
+
+  const openCreate = () => {
+    setCreateForm({ societeId: "", exerciceId: "", typeMissionId: "", dateEcheance: "" });
+    setIsCreateOpen(true);
+  };
+
+  const handleCreateMission = async () => {
+    if (!createForm.exerciceId || !createForm.typeMissionId || !currentUser) return;
+    setSaving(true);
+    try {
+      const dto: CreateMissionDto = {
+        exerciceId: Number(createForm.exerciceId),
+        typeMissionId: Number(createForm.typeMissionId),
+        collaborateurId: currentUser.id,
+        dateEcheance: createForm.dateEcheance || undefined,
+      };
+      await createMission(dto);
+      const updated = await getMyMissions();
+      setMissions(updated);
+      setIsCreateOpen(false);
+      toast({ title: "Mission créée", description: "La mission a été ajoutée à votre liste." });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de créer la mission.", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -203,13 +287,19 @@ export default function MesMissionsPage() {
               Liste des missions qui vous sont attribuées
             </p>
           </div>
-          <Button
-            onClick={() => handleLogout()}
-            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Se déconnecter
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={openCreate} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvelle mission
+            </Button>
+            <Button
+              onClick={() => handleLogout()}
+              className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Se déconnecter
+            </Button>
+          </div>
         </div>
 
         <Navigation />
@@ -400,6 +490,107 @@ export default function MesMissionsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog nouvelle mission */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nouvelle mission</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Société */}
+            <div>
+              <label className="text-sm font-medium">Société *</label>
+              <Select
+                value={createForm.societeId}
+                onValueChange={(val) =>
+                  setCreateForm((prev) => ({ ...prev, societeId: val, exerciceId: "" }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une société..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {societesDisponibles.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Exercice */}
+            <div>
+              <label className="text-sm font-medium">Exercice *</label>
+              <Select
+                value={createForm.exerciceId}
+                onValueChange={(val) =>
+                  setCreateForm((prev) => ({ ...prev, exerciceId: val }))
+                }
+                disabled={!createForm.societeId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un exercice..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {exercicesDeSociete.map((ex) => (
+                    <SelectItem key={ex.id} value={String(ex.id)}>
+                      Clôture : {new Date(ex.dateDeCloture).toLocaleDateString("fr-FR")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Type de mission */}
+            <div>
+              <label className="text-sm font-medium">Type de mission *</label>
+              <Select
+                value={createForm.typeMissionId}
+                onValueChange={(val) =>
+                  setCreateForm((prev) => ({ ...prev, typeMissionId: val }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {typeMissions.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.libelle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date d'échéance */}
+            <div>
+              <label className="text-sm font-medium">Date d&apos;échéance</label>
+              <Input
+                type="date"
+                value={createForm.dateEcheance}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, dateEcheance: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleCreateMission}
+              disabled={saving || !createForm.exerciceId || !createForm.typeMissionId}
+            >
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

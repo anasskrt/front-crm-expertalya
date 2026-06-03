@@ -57,7 +57,7 @@ export function middleware(req: NextRequest) {
   const jwtCookie = req.cookies.get("jwt")?.value;
   const hasJwt = Boolean(jwtCookie);
   const isLogin = pathname === "/login";
-  const isPublic = isLogin || pathname.startsWith("/public");
+  const isPublic = isLogin || pathname === "/forgot-password" || pathname.startsWith("/public");
 
   // Si on a un JWT, vérifier qu'il n'est pas expiré
   if (hasJwt && jwtCookie) {
